@@ -1,0 +1,30 @@
+# Build all images and run all containers
+# `docker-compose -f docker-compose-local.yml up -d --build --force-recreate`
+
+version: '3.11'
+
+services:
+
+  etd-alma-drs-holding-service:
+    container_name: 'etd-alma-drs-holding-service'
+    build:
+      context: './'
+      dockerfile: './DockerfileLocal'
+    volumes:
+      - './:/home/etdadm'
+      - '/tmp:/tmp'
+    env_file:
+      - '.env'
+    environment:
+      - CELERY_LOG_LEVEL=DEBUG
+      - CONSUME_QUEUE_NAME=etd_ingested_into_drs_mjv
+    ports:
+      # Worker API
+      - '10603:8081'
+    networks:
+      - etd-net
+
+# Create a custom docker network if it does not exist already
+networks:
+ etd-net:
+    name: etd-net
