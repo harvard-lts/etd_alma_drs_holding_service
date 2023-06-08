@@ -30,4 +30,4 @@ RUN chmod 755 /root/change_id.sh && \
 
 USER etdadm
 
-CMD celery -A tasks.tasks worker -E --loglevel=$CELERY_LOG_LEVEL --queues $CONSUME_QUEUE_NAME
+CMD celery -A tasks.tasks worker --loglevel=$CELERY_LOG_LEVEL --queues $CONSUME_QUEUE_NAME
