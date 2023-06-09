@@ -1,5 +1,5 @@
 #!groovy
-@Library('lts-basic-pipeline') _
+@Library('lts-basic-pipeline@etd-pipeline')
 
 // projName is the directory name for the project on the servers for it's docker/config files
 // default values: 
