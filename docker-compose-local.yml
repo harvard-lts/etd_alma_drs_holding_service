@@ -17,7 +17,7 @@ services:
       - '.env'
     environment:
       - CELERY_LOG_LEVEL=DEBUG
-      - CONSUME_QUEUE_NAME=etd_ingested_into_drs_mjv
+      - CONSUME_QUEUE_NAME=etd_ingested_into_drs_dd
     ports:
       # Worker API
       - '10603:8081'
