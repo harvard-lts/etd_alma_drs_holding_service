@@ -1,15 +1,19 @@
 from celery import Celery
 import os
+import logging
+import etd
 
 app = Celery()
 app.config_from_object('celeryconfig')
+etd.configure_logger()
+logger = logging.getLogger('etd_alma_drs_holding')
 
 
 @app.task(serializer='json',
           name='etd-alma-drs-holding-service.tasks.add_holdings')
 def invoke_dims(message):
-    print("message")
-    print(message)
+    logger.info("message")
+    logger.info(message)
     invoke_hello_world()
 
 
