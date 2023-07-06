@@ -27,7 +27,8 @@ def add_holdings(message):
             if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
                     feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":
                 # Create holding record
-                logger.debug("FEATURE IS ON>>>>>CREATE DRS HOLDING RECORD IN ALMA")
+                logger.debug("FEATURE IS ON>>>>> \
+                CREATE DRS HOLDING RECORD IN ALMA")
             else:
                 logger.debug("send_to_drs_feature_flag MUST BE ON \
                 FOR THE ALMA HOLDING TO BE CREATED. \
