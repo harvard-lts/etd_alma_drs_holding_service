@@ -2,7 +2,6 @@ from celery import Celery
 import os
 import logging
 import etd
-import json
 
 app = Celery()
 app.config_from_object('celeryconfig')
@@ -16,10 +15,9 @@ SEND_TO_DRS_FEATURE_FLAG = "send_to_drs_feature_flag"
 
 @app.task(serializer='json',
           name='etd-alma-drs-holding-service.tasks.add_holdings')
-def add_holdings(message):
+def add_holdings(json_message):
     logger.debug("message")
-    logger.debug(message)
-    json_message = json.loads(message)
+    logger.debug(json_message)
     if FEATURE_FLAGS in json_message:
         feature_flags = json_message[FEATURE_FLAGS]
         if DRS_HOLDING_FEATURE_FLAG in feature_flags and \
@@ -36,6 +34,9 @@ def add_holdings(message):
         else:
             # Feature is off so do hello world
             return invoke_hello_world(json_message)
+    else:
+        # No feature flags so do hello world for now
+        return invoke_hello_world(json_message)
 
 
 # To be removed when real logic takes its place
