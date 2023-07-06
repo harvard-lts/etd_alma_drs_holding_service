@@ -1,4 +1,4 @@
-# ETD Alma Service
+# ETD Alma DRS Holding Service
 A Python service that assists in adding/updating drs hondings in Alma records for the ETD
 
 <img src="https://github.com/harvard-lts/etd_alma_service/actions/workflows/pytest.yml/badge.svg">
@@ -9,6 +9,31 @@ A Python service that assists in adding/updating drs hondings in Alma records fo
 
 - Coverage badge adapted from [Ned Batchelder](https://nedbatchelder.com/blog/202209/making_a_coverage_badge.html)
 
+## Local setup
+    
+1. Make a copy of the .env.example to .env and modify the user and password variables.
+
+2. Start the container
+    
+```
+docker-compose -f docker-compose-local.yml up -d --build --force-recreate
+```
+
+## Testing
+
+1. Start the container up as described in the <b>Local Setup</b> instructions.
+
+2. Exec into the container:
+
+```
+docker exec -it etd-alma-drs-holding-service bash
+```
+
+3. Run the tests
+
+```
+pytest
+```
 ### Deployment
 ## Dev
 Dev deployment will occur using Jenkins.  To trigger the development deployment, commit and push to the 'trial' or 'main' branch.
