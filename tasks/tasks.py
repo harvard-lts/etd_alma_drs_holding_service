@@ -11,7 +11,7 @@ logger = logging.getLogger('etd_alma_drs_holding')
 
 FEATURE_FLAGS = "feature_flags"
 DRS_HOLDING_FEATURE_FLAG = "drs_holding_record_feature_flag"
-SEND_TO_DRS_FEATURE_FLAG = "drs_holding_record_feature_flag"
+SEND_TO_DRS_FEATURE_FLAG = "send_to_drs_feature_flag"
 
 
 @app.task(serializer='json',
