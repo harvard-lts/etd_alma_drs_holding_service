@@ -35,7 +35,7 @@ def add_holdings(message):
                 send_to_drs_feature_flag IS SET TO OFF")
         else:
             # Feature is off so do hello world
-            invoke_hello_world(json_message)
+            return invoke_hello_world(json_message)
 
 
 # To be removed when real logic takes its place
@@ -57,3 +57,5 @@ def invoke_hello_world(json_message):
 
     app.send_task("tasks.tasks.do_task", args=[new_message], kwargs={},
                   queue=os.getenv("PUBLISH_QUEUE_NAME"))
+
+    return {}
