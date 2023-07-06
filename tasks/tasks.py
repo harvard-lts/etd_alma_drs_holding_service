@@ -16,7 +16,6 @@ SEND_TO_DRS_FEATURE_FLAG = "send_to_drs_feature_flag"
 
 @app.task(serializer='json',
           name='etd-alma-drs-holding-service.tasks.add_holdings')
-
 def add_holdings(message):
     logger.debug("message")
     logger.debug(message)
