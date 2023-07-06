@@ -34,6 +34,9 @@ def add_holdings(json_message):
         else:
             # Feature is off so do hello world
             return invoke_hello_world(json_message)
+    else:
+        # No feature flags so do hello world for now
+        return invoke_hello_world(json_message)
 
 
 # To be removed when real logic takes its place
