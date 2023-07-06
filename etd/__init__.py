@@ -23,7 +23,8 @@ def configure_logger():  # pragma: no cover
 
     logger = logging.getLogger('etd_alma_drs_holding')
     logger.addHandler(console_handler)
-    if not os.getenv("CONSOLE_LOGGING_ONLY"):
+    # Defaults to console logging
+    if os.getenv("CONSOLE_LOGGING_ONLY", "true") == "false":
         file_handler = TimedRotatingFileHandler(
             filename=f"{log_file_path}/{container_id}_console_{timestamp}.log",
             when=LOG_ROTATION,
