@@ -2,6 +2,12 @@ celery==5.2.7
 certifi==2022.12.7
 coverage==7.2.6
 iniconfig==2.0.0
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter-jaeger
+opentelemetry-exporter-jaeger-thrift
+opentelemetry-exporter-otlp-proto-grpc
+opentelemetry-semantic-conventions
 packaging==23.1
 pluggy==1.0.0
 project-paths==1.1.1
