@@ -10,7 +10,6 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import SERVICE_NAME
-# from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 
 app = Celery()
 app.config_from_object('celeryconfig')
