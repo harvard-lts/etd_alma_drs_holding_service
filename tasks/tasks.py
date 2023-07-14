@@ -71,7 +71,7 @@ def add_holdings(json_message):
 
 
 # To be removed when real logic takes its place
-@tracer.start_as_current_span("invoke_hello_world")
+@tracer.start_as_current_span("invoke_hello_world_drs_holding")
 def invoke_hello_world(json_message):
 
     # For 'hello world', we are also going to place a
