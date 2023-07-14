@@ -22,9 +22,10 @@ SEND_TO_DRS_FEATURE_FLAG = "send_to_drs_feature_flag"
 
 # tracing setup
 JAEGER_NAME = os.getenv('JAEGER_NAME')
+JAEGER_SERVICE_NAME = os.getenv('JAEGER_SERVICE_NAME')
 
 resource = Resource(attributes={
-    SERVICE_NAME: "ETD"
+    SERVICE_NAME: JAEGER_SERVICE_NAME
 })
 
 trace.set_tracer_provider(TracerProvider(resource=resource))
