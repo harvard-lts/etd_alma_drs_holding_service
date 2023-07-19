@@ -35,39 +35,39 @@ span_processor = BatchSpanProcessor(otlp_exporter)
 trace.get_tracer_provider().add_span_processor(span_processor)
 
 
-@tracer.start_as_current_span("add_holdings")
 @app.task(serializer='json',
           name='etd-alma-drs-holding-service.tasks.add_holdings')
 def add_holdings(json_message):
 
-    logger.debug("message")
-    logger.debug(json_message)
-    current_span = trace.get_current_span()
-    current_span.add_event(json.dumps(json_message))
-    if FEATURE_FLAGS in json_message:
-        feature_flags = json_message[FEATURE_FLAGS]
-        if DRS_HOLDING_FEATURE_FLAG in feature_flags and \
-                feature_flags[DRS_HOLDING_FEATURE_FLAG] == "on":
-            if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
-                    feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":
-                # Create holding record
-                logger.debug("FEATURE IS ON>>>>> \
-                CREATE DRS HOLDING RECORD IN ALMA")
-                current_span.add_event("FEATURE IS ON>>>>> \
-                CREATE DRS HOLDING RECORD IN ALMA")
+    with tracer.start_as_current_span("add_holdings") as current_span:
+        logger.debug("message")
+        logger.debug(json_message)
+        current_span.add_event(json.dumps(json_message))
+        if FEATURE_FLAGS in json_message:
+            feature_flags = json_message[FEATURE_FLAGS]
+            if DRS_HOLDING_FEATURE_FLAG in feature_flags and \
+                    feature_flags[DRS_HOLDING_FEATURE_FLAG] == "on":
+                if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
+                        feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":
+                    # Create holding record
+                    logger.debug("FEATURE IS ON>>>>> \
+                    CREATE DRS HOLDING RECORD IN ALMA")
+                    current_span.add_event("FEATURE IS ON>>>>> \
+                    CREATE DRS HOLDING RECORD IN ALMA")
+                else:
+                    logger.debug("send_to_drs_feature_flag MUST BE ON \
+                    FOR THE ALMA HOLDING TO BE CREATED. \
+                    send_to_drs_feature_flag IS SET TO OFF")
+                    current_span.add_event("send_to_drs_feature_flag \
+                    MUST BE ON \
+                    FOR THE ALMA HOLDING TO BE CREATED. \
+                    send_to_drs_feature_flag IS SET TO OFF")
             else:
-                logger.debug("send_to_drs_feature_flag MUST BE ON \
-                FOR THE ALMA HOLDING TO BE CREATED. \
-                send_to_drs_feature_flag IS SET TO OFF")
-                current_span.add_event("send_to_drs_feature_flag MUST BE ON \
-                FOR THE ALMA HOLDING TO BE CREATED. \
-                send_to_drs_feature_flag IS SET TO OFF")
+                # Feature is off so do hello world
+                return invoke_hello_world(json_message)
         else:
-            # Feature is off so do hello world
+            # No feature flags so do hello world for now
             return invoke_hello_world(json_message)
-    else:
-        # No feature flags so do hello world for now
-        return invoke_hello_world(json_message)
 
 
 # To be removed when real logic takes its place
