@@ -10,6 +10,8 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import SERVICE_NAME
+from opentelemetry.trace.propagation.tracecontext \
+    import TraceContextTextMapPropagator
 
 app = Celery()
 app.config_from_object('celeryconfig')
@@ -39,7 +41,12 @@ trace.get_tracer_provider().add_span_processor(span_processor)
           name='etd-alma-drs-holding-service.tasks.add_holdings')
 def add_holdings(json_message):
 
-    with tracer.start_as_current_span("add_holdings") as current_span:
+    ctx = None
+    if "traceparent" in json_message:
+        carrier = {"traceparent": json_message["traceparent"]}
+        ctx = TraceContextTextMapPropagator().extract(carrier)
+    with tracer.start_as_current_span("add_holdings", context=ctx) \
+            as current_span:
         logger.debug("message")
         logger.debug(json_message)
         current_span.add_event(json.dumps(json_message))
@@ -71,28 +78,37 @@ def add_holdings(json_message):
 
 
 # To be removed when real logic takes its place
-@tracer.start_as_current_span("invoke_hello_world_drs_holding")
 def invoke_hello_world(json_message):
 
-    # For 'hello world', we are also going to place a
-    # message onto the etd_ingested_into_drs queue
-    # to allow the pipeline to continue
-    current_span = trace.get_current_span()
-    new_message = {"hello": "from etd-alma-drs-holding-service"}
-    if FEATURE_FLAGS in json_message:
-        logger.debug("FEATURE FLAGS FOUND")
-        logger.debug(json_message[FEATURE_FLAGS])
-        new_message[FEATURE_FLAGS] = json_message[FEATURE_FLAGS]
-        current_span.add_event("FEATURE FLAGS FOUND")
-        current_span.add_event(json.dumps(json_message[FEATURE_FLAGS]))
+    ctx = None
+    if "traceparent" in json_message:
+        carrier = {"traceparent": json_message["traceparent"]}
+        ctx = TraceContextTextMapPropagator().extract(carrier)
+    with tracer.start_as_current_span("invoke_hello_world_drs_holding",
+                                      context=ctx) as current_span:
 
-    # If only unit testing, return the message and
-    # do not trigger the next task.
-    if "unit_test" in json_message:
-        return new_message
+        # For 'hello world', we are also going to place a
+        # message onto the etd_ingested_into_drs queue
+        # to allow the pipeline to continue
+        new_message = {"hello": "from etd-alma-drs-holding-service"}
+        if FEATURE_FLAGS in json_message:
+            logger.debug("FEATURE FLAGS FOUND")
+            logger.debug(json_message[FEATURE_FLAGS])
+            new_message[FEATURE_FLAGS] = json_message[FEATURE_FLAGS]
+            current_span.add_event("FEATURE FLAGS FOUND")
+            current_span.add_event(json.dumps(json_message[FEATURE_FLAGS]))
 
-    current_span.add_event("to next queue")
-    app.send_task("tasks.tasks.do_task", args=[new_message], kwargs={},
-                  queue=os.getenv("PUBLISH_QUEUE_NAME"))
+        # If only unit testing, return the message and
+        # do not trigger the next task.
+        if "unit_test" in json_message:
+            return new_message
 
-    return {}
+        carrier = {}
+        TraceContextTextMapPropagator().inject(carrier)
+        traceparent = carrier["traceparent"]
+        new_message["traceparent"] = traceparent
+        current_span.add_event("to next queue")
+        app.send_task("tasks.tasks.do_task", args=[new_message], kwargs={},
+                      queue=os.getenv("PUBLISH_QUEUE_NAME"))
+
+        return {}
