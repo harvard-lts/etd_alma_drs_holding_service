@@ -10,6 +10,8 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import SERVICE_NAME
+from opentelemetry.trace.propagation.tracecontext \
+    import TraceContextTextMapPropagator
 
 app = Celery()
 app.config_from_object('celeryconfig')
@@ -35,64 +37,78 @@ span_processor = BatchSpanProcessor(otlp_exporter)
 trace.get_tracer_provider().add_span_processor(span_processor)
 
 
-@tracer.start_as_current_span("add_holdings")
 @app.task(serializer='json',
           name='etd-alma-drs-holding-service.tasks.add_holdings')
 def add_holdings(json_message):
 
-    logger.debug("message")
-    logger.debug(json_message)
-    current_span = trace.get_current_span()
-    current_span.add_event(json.dumps(json_message))
-    if FEATURE_FLAGS in json_message:
-        feature_flags = json_message[FEATURE_FLAGS]
-        if DRS_HOLDING_FEATURE_FLAG in feature_flags and \
-                feature_flags[DRS_HOLDING_FEATURE_FLAG] == "on":
-            if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
-                    feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":
-                # Create holding record
-                logger.debug("FEATURE IS ON>>>>> \
-                CREATE DRS HOLDING RECORD IN ALMA")
-                current_span.add_event("FEATURE IS ON>>>>> \
-                CREATE DRS HOLDING RECORD IN ALMA")
+    ctx = None
+    if "traceparent" in json_message:
+        carrier = {"traceparent": json_message["traceparent"]}
+        ctx = TraceContextTextMapPropagator().extract(carrier)
+    with tracer.start_as_current_span("add_holdings", context=ctx) \
+            as current_span:
+        logger.debug("message")
+        logger.debug(json_message)
+        current_span.add_event(json.dumps(json_message))
+        if FEATURE_FLAGS in json_message:
+            feature_flags = json_message[FEATURE_FLAGS]
+            if DRS_HOLDING_FEATURE_FLAG in feature_flags and \
+                    feature_flags[DRS_HOLDING_FEATURE_FLAG] == "on":
+                if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
+                        feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":
+                    # Create holding record
+                    logger.debug("FEATURE IS ON>>>>> \
+                    CREATE DRS HOLDING RECORD IN ALMA")
+                    current_span.add_event("FEATURE IS ON>>>>> \
+                    CREATE DRS HOLDING RECORD IN ALMA")
+                else:
+                    logger.debug("send_to_drs_feature_flag MUST BE ON \
+                    FOR THE ALMA HOLDING TO BE CREATED. \
+                    send_to_drs_feature_flag IS SET TO OFF")
+                    current_span.add_event("send_to_drs_feature_flag \
+                    MUST BE ON \
+                    FOR THE ALMA HOLDING TO BE CREATED. \
+                    send_to_drs_feature_flag IS SET TO OFF")
             else:
-                logger.debug("send_to_drs_feature_flag MUST BE ON \
-                FOR THE ALMA HOLDING TO BE CREATED. \
-                send_to_drs_feature_flag IS SET TO OFF")
-                current_span.add_event("send_to_drs_feature_flag MUST BE ON \
-                FOR THE ALMA HOLDING TO BE CREATED. \
-                send_to_drs_feature_flag IS SET TO OFF")
+                # Feature is off so do hello world
+                return invoke_hello_world(json_message)
         else:
-            # Feature is off so do hello world
+            # No feature flags so do hello world for now
             return invoke_hello_world(json_message)
-    else:
-        # No feature flags so do hello world for now
-        return invoke_hello_world(json_message)
 
 
 # To be removed when real logic takes its place
-@tracer.start_as_current_span("invoke_hello_world_drs_holding")
 def invoke_hello_world(json_message):
 
-    # For 'hello world', we are also going to place a
-    # message onto the etd_ingested_into_drs queue
-    # to allow the pipeline to continue
-    current_span = trace.get_current_span()
-    new_message = {"hello": "from etd-alma-drs-holding-service"}
-    if FEATURE_FLAGS in json_message:
-        logger.debug("FEATURE FLAGS FOUND")
-        logger.debug(json_message[FEATURE_FLAGS])
-        new_message[FEATURE_FLAGS] = json_message[FEATURE_FLAGS]
-        current_span.add_event("FEATURE FLAGS FOUND")
-        current_span.add_event(json.dumps(json_message[FEATURE_FLAGS]))
+    ctx = None
+    if "traceparent" in json_message:
+        carrier = {"traceparent": json_message["traceparent"]}
+        ctx = TraceContextTextMapPropagator().extract(carrier)
+    with tracer.start_as_current_span("invoke_hello_world_drs_holding",
+                                      context=ctx) as current_span:
 
-    # If only unit testing, return the message and
-    # do not trigger the next task.
-    if "unit_test" in json_message:
-        return new_message
+        # For 'hello world', we are also going to place a
+        # message onto the etd_ingested_into_drs queue
+        # to allow the pipeline to continue
+        new_message = {"hello": "from etd-alma-drs-holding-service"}
+        if FEATURE_FLAGS in json_message:
+            logger.debug("FEATURE FLAGS FOUND")
+            logger.debug(json_message[FEATURE_FLAGS])
+            new_message[FEATURE_FLAGS] = json_message[FEATURE_FLAGS]
+            current_span.add_event("FEATURE FLAGS FOUND")
+            current_span.add_event(json.dumps(json_message[FEATURE_FLAGS]))
 
-    current_span.add_event("to next queue")
-    app.send_task("tasks.tasks.do_task", args=[new_message], kwargs={},
-                  queue=os.getenv("PUBLISH_QUEUE_NAME"))
+        # If only unit testing, return the message and
+        # do not trigger the next task.
+        if "unit_test" in json_message:
+            return new_message
 
-    return {}
+        carrier = {}
+        TraceContextTextMapPropagator().inject(carrier)
+        traceparent = carrier["traceparent"]
+        new_message["traceparent"] = traceparent
+        current_span.add_event("to next queue")
+        app.send_task("tasks.tasks.do_task", args=[new_message], kwargs={},
+                      queue=os.getenv("PUBLISH_QUEUE_NAME"))
+
+        return {}
