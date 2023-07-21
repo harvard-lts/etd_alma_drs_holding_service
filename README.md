@@ -89,3 +89,7 @@ NOTE: you should see a pipeline with your new tag.  (if not, click on the "scan 
 - exec into docker
 - `> pytest tests/unit`
 - Note, integration tests are run as part of github actions, not locally
+
+### Using OpenTelemetry for tracing
+
+This app uses OpenTelemetry (https://opentelemetry.io/) for live tracing. To see how it is implemented in the application, refer to this wiki: https://wiki.harvard.edu/confluence/display/LibraryTechServices/OpenTelemetry
