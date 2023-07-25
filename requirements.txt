@@ -1,5 +1,5 @@
 celery==5.2.7
-certifi==2022.12.7
+certifi==2023.7.22
 coverage==7.2.6
 iniconfig==2.0.0
 opentelemetry-api==1.19.0
