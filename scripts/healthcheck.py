@@ -3,6 +3,8 @@ import sys
 import time
 from pathlib import Path
 import requests
+from requests.packages import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # heartbeat script for docker/k8s
 
 hbeat_path = os.getenv("HEARTBEAT_FILE", "/tmp/worker_heartbeat")
