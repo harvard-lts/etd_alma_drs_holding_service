@@ -2,6 +2,7 @@ from celery import Celery
 from celery import bootsteps
 from celery.signals import worker_ready
 from celery.signals import worker_shutdown
+from pathlib import Path
 import os
 import logging
 import etd
