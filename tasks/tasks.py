@@ -1,4 +1,7 @@
 from celery import Celery
+from celery import bootsteps
+from celery.signals import worker_ready
+from celery.signals import worker_shutdown
 import os
 import logging
 import etd
@@ -35,6 +38,49 @@ tracer = trace.get_tracer(__name__)
 otlp_exporter = OTLPSpanExporter(endpoint=JAEGER_NAME, insecure=True)
 span_processor = BatchSpanProcessor(otlp_exporter)
 trace.get_tracer_provider().add_span_processor(span_processor)
+
+# heartbeat setup
+# code is from
+# https://github.com/celery/celery/issues/4079#issuecomment-1270085680
+hbeat_path = os.getenv("HEARTBEAT_FILE", "/tmp/worker_heartbeat")
+ready_path = os.getenv("READINESS_FILE", "/tmp/worker_ready")
+update_interval = float(os.getenv("HEALTHCHECK_UPDATE_INTERVAL", 15.0))
+HEARTBEAT_FILE = Path(hbeat_path)
+READINESS_FILE = Path(ready_path)
+UPDATE_INTERVAL = update_interval  # touch file every 15 seconds
+
+
+class LivenessProbe(bootsteps.StartStopStep):
+    requires = {'celery.worker.components:Timer'}
+
+    def __init__(self, worker, **kwargs):  # pragma: no cover
+        self.requests = []
+        self.tref = None
+
+    def start(self, worker):  # pragma: no cover
+        self.tref = worker.timer.call_repeatedly(
+            UPDATE_INTERVAL, self.update_heartbeat_file,
+            (worker,), priority=10,
+        )
+
+    def stop(self, worker):  # pragma: no cover
+        HEARTBEAT_FILE.unlink(missing_ok=True)
+
+    def update_heartbeat_file(self, worker):  # pragma: no cover
+        HEARTBEAT_FILE.touch()
+
+
+@worker_ready.connect
+def worker_ready(**_):  # pragma: no cover
+    READINESS_FILE.touch()
+
+
+@worker_shutdown.connect
+def worker_shutdown(**_):  # pragma: no cover
+    READINESS_FILE.unlink(missing_ok=True)
+
+
+app.steps["worker"].add(LivenessProbe)
 
 
 @app.task(serializer='json',
