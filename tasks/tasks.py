@@ -89,7 +89,7 @@ app.steps["worker"].add(LivenessProbe)
 def add_holdings(json_message):
 
     ctx = None
-    if "traceparent" in json_message:
+    if "traceparent" in json_message:  # pragma: no cover, tracing is not being tested # noqa: E501
         carrier = {"traceparent": json_message["traceparent"]}
         ctx = TraceContextTextMapPropagator().extract(carrier)
     with tracer.start_as_current_span("add_holdings", context=ctx) \
@@ -100,7 +100,7 @@ def add_holdings(json_message):
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
             if DRS_HOLDING_FEATURE_FLAG in feature_flags and \
-                    feature_flags[DRS_HOLDING_FEATURE_FLAG] == "on":
+                    feature_flags[DRS_HOLDING_FEATURE_FLAG] == "on":  # pragma: no cover, unit test should not create an Alma holding record # noqa: E501
                 if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
                         feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":
                     # Create holding record
@@ -128,7 +128,7 @@ def add_holdings(json_message):
 def invoke_hello_world(json_message):
 
     ctx = None
-    if "traceparent" in json_message:
+    if "traceparent" in json_message:  # pragma: no cover, tracing is not being tested # noqa: E501
         carrier = {"traceparent": json_message["traceparent"]}
         ctx = TraceContextTextMapPropagator().extract(carrier)
     with tracer.start_as_current_span("invoke_hello_world_drs_holding",
@@ -150,12 +150,12 @@ def invoke_hello_world(json_message):
         if "unit_test" in json_message:
             return new_message
 
-        carrier = {}
-        TraceContextTextMapPropagator().inject(carrier)
-        traceparent = carrier["traceparent"]
-        new_message["traceparent"] = traceparent
-        current_span.add_event("to next queue")
+        carrier = {}  # pragma: no cover, tracing is not being tested # noqa: E501
+        TraceContextTextMapPropagator().inject(carrier)  # pragma: no cover, tracing is not being tested # noqa: E501
+        traceparent = carrier["traceparent"]  # pragma: no cover, tracing is not being tested # noqa: E501
+        new_message["traceparent"] = traceparent  # pragma: no cover, tracing is not being tested # noqa: E501
+        current_span.add_event("to next queue")  # pragma: no cover, tracing is not being tested # noqa: E501
         app.send_task("tasks.tasks.do_task", args=[new_message], kwargs={},
-                      queue=os.getenv("PUBLISH_QUEUE_NAME"))
+                      queue=os.getenv("PUBLISH_QUEUE_NAME"))  # pragma: no cover, does not reach this for unit testing # noqa: E501
 
-        return {}
+        return {}  # pragma: no cover, does not reach this for unit testing # noqa: E501
