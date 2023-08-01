@@ -46,7 +46,7 @@ jobs:
           pip install coverage
           python -m coverage run -p -m pytest
           python -m coverage combine
-          python -m coverage report -m --skip-covered --fail-under=80
+          python -m coverage report -m --skip-covered --fail-under=100
           python -m coverage json
 
       - name: "Combine"

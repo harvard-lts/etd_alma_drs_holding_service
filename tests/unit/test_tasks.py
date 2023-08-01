@@ -14,3 +14,8 @@ class TestTasksClass():
         retval = tasks.add_holdings(message)
         assert "hello" in retval
         assert "feature_flags" in retval
+
+    def test_add_holdings_no_feature_flags(self):
+        message = {"unit_test": "true"}
+        retval = tasks.add_holdings(message)
+        assert "hello" in retval

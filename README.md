@@ -54,6 +54,15 @@ NOTE: you should see a pipeline with your new tag.  (if not, click on the "scan 
 6.The build process should end with a green status. the docker image is now ready for deployment to prod.
 7.Work with ops to deploy to prod using the ETD-IF project.
 
+### Prerequisites to running docker locally
+- Requires telemetry/jaeger docker running
+- Make sure .env has JAEGER_NAME and JAEGER_SERVICE_NAME (see .env.example)
+- - Note JAEGER_NAME must have local ip (if on vpn go to Cisco Icon -> Show Statistics Window -> CLient Address (IPv4)
+- start jaeger docker
+- `docker pull jaegertracing/all-in-one:latest` followed by
+- `docker run -d --name jaeger  -e COLLECTOR_ZIPKIN_HOST_PORT=:9411  -e COLLECTOR_OTLP_ENABLED=true  -p 6831:6831/udp  -p 6832:6832/udp  -p 5778:5778  -p 16686:16686  -p 4317:4317  -p 4318:4318  -p 14250:14250  -p 14268:14268  -p 14269:14269  -p 9411:9411  jaegertracing/all-in-one:latest`
+- You can now run hello world, and do testing
+
 ### Run hello world example locally
 
 - Clone this repo from github 
