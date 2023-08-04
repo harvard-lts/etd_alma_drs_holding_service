@@ -97,6 +97,10 @@ def add_holdings(json_message):
         logger.debug("message")
         logger.debug(json_message)
         current_span.add_event(json.dumps(json_message))
+        if 'identifier' in json_message:
+            proquest_identifier = json_message['identifier']
+            current_span.set_attribute("identifier", proquest_identifier)
+            logger.debug("processing id: " + str(proquest_identifier))
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
             if DRS_HOLDING_FEATURE_FLAG in feature_flags and \
@@ -144,6 +148,12 @@ def invoke_hello_world(json_message):
             new_message[FEATURE_FLAGS] = json_message[FEATURE_FLAGS]
             current_span.add_event("FEATURE FLAGS FOUND")
             current_span.add_event(json.dumps(json_message[FEATURE_FLAGS]))
+
+        if 'identifier' in json_message:
+            proquest_identifier = json_message['identifier']
+            new_message["identifier"] = proquest_identifier
+            current_span.set_attribute("identifier", proquest_identifier)
+            logger.debug("processing id: " + str(proquest_identifier))
 
         # If only unit testing, return the message and
         # do not trigger the next task.
