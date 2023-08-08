@@ -24,7 +24,7 @@ COPY --chown=etdadm ./ .
 # Update permissions for the etdadm user and group
 COPY change_id.sh /root/change_id.sh
 RUN chmod 755 /root/change_id.sh && \
-  /root/change_id.sh -u 55031 -g 55031
+  /root/change_id.sh -u 55031 -g 1636
 
 USER etdadm
 
