@@ -30,15 +30,13 @@ SEND_TO_DRS_FEATURE_FLAG = "send_to_drs_feature_flag"
 JAEGER_NAME = os.getenv('JAEGER_NAME')
 JAEGER_SERVICE_NAME = os.getenv('JAEGER_SERVICE_NAME')
 
-resource = Resource(attributes={
-    SERVICE_NAME: JAEGER_SERVICE_NAME
-})
-
-trace.set_tracer_provider(TracerProvider(resource=resource))
-tracer = trace.get_tracer(__name__)
+resource = Resource(attributes={SERVICE_NAME: JAEGER_SERVICE_NAME})
+provider = TracerProvider(resource=resource)
 otlp_exporter = OTLPSpanExporter(endpoint=JAEGER_NAME, insecure=True)
 span_processor = BatchSpanProcessor(otlp_exporter)
-trace.get_tracer_provider().add_span_processor(span_processor)
+provider.add_span_processor(span_processor)
+trace.set_tracer_provider(provider)
+tracer = trace.get_tracer(__name__)
 
 # heartbeat setup
 # code is from
