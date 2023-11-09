@@ -6,7 +6,7 @@ jobs:
   build:
     strategy:
       matrix:
-        python-version: [3.11.4]
+        python-version: [3.11.5]
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +19,7 @@ jobs:
         run: git checkout ${{ env.BRANCH }}
               
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
 
