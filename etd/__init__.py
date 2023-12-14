@@ -16,7 +16,8 @@ def configure_logger():  # pragma: no cover
     log_file_path = os.getenv("LOGFILE_PATH",
                               "/home/etdadm/logs/etd_alma_drs_holding")
     formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+                '%(asctime)s - %(name)s - %(levelname)s - ' +
+                '[%(filename)s:%(funcName)s:%(lineno)d] - %(message)s')
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
