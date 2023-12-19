@@ -95,7 +95,7 @@ def add_holdings(json_message):
         logger.debug("message")
         logger.debug(json_message)
         current_span.add_event(json.dumps(json_message))
-        if 'identifier' in json_message:
+        if 'pqid' in json_message:
             proquest_identifier = json_message['pqid']
             current_span.set_attribute("identifier", proquest_identifier)
             logger.debug("processing id: " + str(proquest_identifier))
