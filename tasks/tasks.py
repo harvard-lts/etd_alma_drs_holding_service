@@ -147,9 +147,9 @@ def invoke_hello_world(json_message):
             current_span.add_event("FEATURE FLAGS FOUND")
             current_span.add_event(json.dumps(json_message[FEATURE_FLAGS]))
 
-        if 'identifier' in json_message:
-            proquest_identifier = json_message['identifier']
-            new_message["identifier"] = proquest_identifier
+        if 'pqid' in json_message:
+            proquest_identifier = json_message['pqid']
+            new_message["pqid"] = proquest_identifier
             current_span.set_attribute("identifier", proquest_identifier)
             logger.debug("processing id: " + str(proquest_identifier))
 
