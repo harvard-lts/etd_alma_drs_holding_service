@@ -3,9 +3,6 @@ import requests
 
 """
 This is a template of a basic worker class for etds.
-
-Since: 2023-05-23
-Author: cgoines
 """
 
 
