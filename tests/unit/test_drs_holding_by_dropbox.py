@@ -1,8 +1,13 @@
 from etd.drs_holding_by_dropbox import DRSHoldingByDropbox
+import lxml.etree as ET
+import os.path
 
 class TestDRSHoldingByDropbox():
 
     def test_getFromMets(self):
+        """
+        Test case for the getFromMets method of DRSHoldingByDropbox class.
+        """
         metsFile = "/home/etdadm/tests/data/samplemets.xml"
         school = "gsd"
 
@@ -16,6 +21,9 @@ class TestDRSHoldingByDropbox():
         assert "title" in result
 
     def test_getFromMets_missing_values(self):
+        """
+        Test case to verify the behavior of getFromMets method when there are missing values in the mets file.
+        """
         metsFile = "/home/etdadm/tests/data/samplemets.xml"
         school = "gsd"
 
@@ -26,14 +34,23 @@ class TestDRSHoldingByDropbox():
 
         assert not result
     
-    def test_writeMarcXml(self, monkeypatch):
-        batch = "alma2023071720-993578-gsd"
+    def test_writeMarcXml(self):
+        """
+        Test case for the writeMarcXml method of DRSHoldingByDropbox class.
+        """
+        batch = "almadrsholding2023071720-993578-gsd"
         drs_holding = DRSHoldingByDropbox('1234567890')
         batchOutputDir = "/home/etdadm/tests/data/in/proquest2023071720-993578-gsd"
-        metsFile = os.path.join(batchOutputDir, "mets.xml")
+        
         school = "gsd"
         # Generate the data
-        generatedMarcXmlValues = drs_holding.getFromMets(metsFile, school)
+        generatedMarcXmlValues = {}
+        generatedMarcXmlValues['titleIndicator2'] = '0'
+        generatedMarcXmlValues['title'] = "Naming Expeditor: Reimagining Institutional Naming System at Harvard"
+        generatedMarcXmlValues['dateCreated'] = "2023-05"
+        generatedMarcXmlValues['school'] = school
+        generatedMarcXmlValues['proquestId'] = "1234567890"
+        generatedMarcXmlValues['object_urn'] = "URN-3:HUL.DRS.OBJECT:101115942"
         verbose = False
 
         # Write the marcxml
@@ -42,46 +59,22 @@ class TestDRSHoldingByDropbox():
         assert os.path.exists(marcFile)
         namespace_mapping = {'marc': 'http://www.loc.gov/MARC21/slim'}
         doc = ET.parse(marcFile)
-        authorXPath = "//marc:record/marc:datafield[@tag='100']" \
-                      "/marc:subfield[@code='a']"
-        degreeXPath = "//marc:record/marc:datafield[@tag='100']" \
-                      "/marc:subfield[@code='c']"
+        pqidXPath = "//marc:record/marc:datafield[@tag='035']" \
+                     "/marc:subfield[@code='a']"
         titleXPath = "//marc:record/marc:datafield[@tag='245']" \
                      "/marc:subfield[@code='a']"
-        schoolXPath = "//marc:record/marc:datafield[@tag='502']" \
-                      "/marc:subfield[@code='a']"
-        advisorXpath = "//marc:record/marc:datafield[@tag='720']" \
-                       "/marc:subfield[@code='a']"
-        abstractXPath = "//marc:record/marc:datafield[@tag='520']" \
-                        "/marc:subfield[@code='a']"
-        dashXpath = "//marc:record/marc:datafield[@tag='856']" \
-                    "/marc:subfield[@code='u']"
-        assert doc.xpath(authorXPath,
-                         namespaces=namespace_mapping)[0].text == \
-            "Peng, Yolanda Yuanlu"
-        assert doc.xpath(degreeXPath,
-                         namespaces=namespace_mapping)[0].text == \
-            "(MDes, Harvard University, 2023)"
+        objecturnXPath = "//marc:record/marc:datafield[@tag='852']" \
+                     "/marc:subfield[@code='z']"
+        libcodeXPath = "//marc:record/marc:datafield[@tag='909']" \
+                     "/marc:subfield[@code='k']"
+        assert doc.xpath(pqidXPath, namespaces=namespace_mapping)[0].text == \
+            "(ProQuestETD)1234567890"
         assert doc.xpath(titleXPath, namespaces=namespace_mapping)[0].text == \
             "Naming Expeditor: " \
             "Reimagining Institutional Naming System at Harvard"
-        assert doc.xpath(schoolXPath,
-                         namespaces=namespace_mapping)[0].text == \
-            "Thesis (MDes, Master in Design Studies, " \
-            "Department of Urban Planning and Design) -- " \
-            "Harvard Graduate School of Design, May 2023."
-        assert doc.xpath(advisorXpath,
-                         namespaces=namespace_mapping)[0].text == \
-            "Shoshan, Malkit,"
-        assert doc.xpath(advisorXpath,
-                         namespaces=namespace_mapping)[1].text == \
-            "Bruguera, Tania,"
-        assert doc.xpath(advisorXpath,
-                         namespaces=namespace_mapping)[5].text == \
-            "Claudio, Yazmin C,"
-        assert doc.xpath(abstractXPath,
-                         namespaces=namespace_mapping)[0].text == \
-            abstractText
-        assert doc.xpath(dashXpath,
-                         namespaces=namespace_mapping)[0].text == \
-            "https://nrs.harvard.edu/urn-3:HUL.InstRepos:993578"
+        assert doc.xpath(objecturnXPath, namespaces=namespace_mapping)[0].text == \
+            "Preservation object," \
+            "URN-3:HUL.DRS.OBJECT:101115942"
+        assert doc.xpath(libcodeXPath, namespaces=namespace_mapping)[0].text == \
+            "netDES"
+        os.remove(marcFile)

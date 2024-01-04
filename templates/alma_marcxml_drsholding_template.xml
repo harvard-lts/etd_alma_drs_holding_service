@@ -1,17 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
-  
-<collection xmlns="http://www.loc.gov/MARC21/slim"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.loc.gov/MARC21/slim http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd">
-    <!-- COMMENT: The above element and attributes are always the same for any valid MARCXML file.
-                  A collection can have multiple 'records'  -->
- <record>
+<record>
     <!-- COMMENT: The above element is constant. Each thesis description is wrapped in this element.-->
   
-     <leader>LEADER_VALUE</leader>
+     <leader>00000nam a2200325 i 4500</leader>
         <!-- COMMENT: The above element is constant.-->
   
-     <controlfield tag="008">FIXED_FIELD_008</controlfield>
+     <controlfield tag="008">YYMMDDsDATE_CREATED_VALUE    mau|||||om||| 000|0|eng|d</controlfield>
   
      <datafield tag="035" ind1=" " ind2=" ">
             <subfield code="a">(ProQuestETD)PROQUEST_IDENTIFIER_VALUE</subfield>
@@ -63,4 +56,4 @@
         <subfield code="k">netLIB_CODE_3_CHAR</subfield>
      </datafield>
       
-</record></collection>
+</record>

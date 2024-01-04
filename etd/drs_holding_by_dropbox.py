@@ -14,8 +14,6 @@ import sys
 import re
 from lxml import etree
 import logging
-from pymongo import MongoClient
-from xml.sax.saxutils import escape
 from etd.mongo_util import MongoUtil
 import etd.mongo_util as mongo_util
 from . import configure_logger
@@ -294,7 +292,7 @@ class DRSHoldingByDropbox():
         return drsHoldingSent
 	
     @tracer.start_as_current_span("send_holding_to_alma_worker")
-    def __record_already_processed(self):
+    def __record_already_processed(self): # pragma: no cover, not using for unit tests
         current_span = trace.get_current_span()
         current_span.add_event("verifying if DRS holding exists")
         query = {mongo_util.FIELD_SUBMISSION_STATUS:
@@ -322,7 +320,7 @@ class DRSHoldingByDropbox():
         return len(record_list) > 0
 	
     @tracer.start_as_current_span("send_holding_to_alma_worker")
-    def ___get_record_from_mongo(self):
+    def ___get_record_from_mongo(self): # pragma: no cover, not using for unit tests
         current_span = trace.get_current_span()
         current_span.add_event("getting data from mongo exists")
         query = {mongo_util.FIELD_SUBMISSION_STATUS:
@@ -411,25 +409,23 @@ class DRSHoldingByDropbox():
             return False
 
 	# Write marcxml using data passed in the marcXmlValues dictionary
-    def writeMarcXml(batch, batchOutDir, marcXmlValues, verbose):  # pragma: no cover
+    def writeMarcXml(self, batch, batchOutDir, marcXmlValues, verbose):  # pragma: no cover
         global notifyJM, jobCode
         if notifyJM == False:
             notifyJM = notify('monitor', jobCode, None)
-        removeNodes   = set()
-        xmlRecordFile = f'{batchOutDir}/' + batch.replace('proquest', 'almadrsdark') + '.xml'
+        xmlRecordFile = f'{batchOutDir}/' + batch.replace('proquest', 'almadrsholding') + '.xml'
 
 		# Load template file and swapped in variables
         marcXmlTree = etree.parse(almaMarcxmlTemplate)
         rootRecord = marcXmlTree.getroot()
-
         for child in rootRecord.iter('controlfield', 'subfield'):
-		
-			# 008 controlfield
+            # 008 controlfield
             if child.tag == 'controlfield':
                 if child.attrib['tag'] == '008':
                     childText = child.text.replace('YYMMDD', yymmdd)
                     childText = childText.replace('DATE_CREATED_VALUE', marcXmlValues['dateCreated'])
                     child.text = childText
+                    print(child.text)
 
 			# datafield/subfields
             elif child.tag == 'subfield':
@@ -452,25 +448,16 @@ class DRSHoldingByDropbox():
 
 					# Datafield 852
                     elif parent.attrib['tag'] == '852':
-                        if 'dash_id' in marcXmlValues: # print NET/ETD if there is a dash id
-                            if child.attrib['code'] == 'b' and child.text == 'NET':
-                                pass
-                            elif child.attrib['code'] == 'b' and child.text == 'LIB_CODE_3_CHAR':
-                                removeNodes.add(parent)
-                        else: # print LIB_CODE_3_CHAR if there is no dash id
-                            if child.attrib['code'] == 'b' and child.text == 'LIB_CODE_3_CHAR':
-                                childText  = child.text.replace('LIB_CODE_3_CHAR', schools[marcXmlValues['school']]['lib_code_3_char'])
+                        if 'object_urn' in marcXmlValues: # print NET/ETD if there is a dash id
+                            if child.attrib['code'] == 'z':
+                                childText  = child.text.replace('[DRS OBJECT URN]', marcXmlValues['object_urn'])
                                 child.text = childText
-                            elif child.attrib['code'] == 'b' and child.text == 'NET':
-                                removeNodes.add(parent)
 
 					# Datafield 909, proquest id
                     elif parent.attrib['tag'] == '909':
                         if child.attrib['code'] == 'k':
                             childText  = child.text.replace('LIB_CODE_3_CHAR', schools[marcXmlValues['school']]['lib_code_3_char'])
                             child.text = childText
-                        else:
-                            removeNodes.add(parent)
 		
 		# Write xml record out in batch directory
         with open(xmlRecordFile, 'w') as xmlRecordOut:
