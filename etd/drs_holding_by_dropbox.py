@@ -91,10 +91,11 @@ This the worker class for the etd alma service.
 class DRSHoldingByDropbox():
     logger = logging.getLogger('etd_alma_drs_holding')
 
-    def __init__(self, pqid, test_collection=None):
+    def __init__(self, pqid, object_urn, test_collection=None):
         configure_logger()
         self.mongoutil = MongoUtil()
         self.pqid = pqid
+        self.object_urn = object_urn
         if test_collection is not None:  # pragma: no cover, only changes collection # noqa
             self.mongoutil.set_collection(self.mongoutil.db[test_collection])
 	
@@ -112,6 +113,7 @@ class DRSHoldingByDropbox():
         force = False
         verbose = False
         integration_test = False
+        retval = False
         current_span = trace.get_current_span()
         if FEATURE_FLAGS in message:
             feature_flags = message[FEATURE_FLAGS]
@@ -128,9 +130,9 @@ class DRSHoldingByDropbox():
             current_span.add_event("running integration test for alma drs holding service")
         current_span.add_event("sending to alma drs holding worker main")
         self.logger.info('sending to alma drs holding worker main')
-        self.send_to_alma_worker(force, verbose, integration_test)
+        retval = self.send_to_alma_worker(force, verbose, integration_test)
         self.logger.info('complete')
-        return True
+        return retval
 		
     @tracer.start_as_current_span("send_holding_to_alma_worker")
     def send_to_alma_worker(self, force=False, verbose=False, integration_test=False):  # pragma: no cover
@@ -182,7 +184,7 @@ class DRSHoldingByDropbox():
                 notifyJM.log('fail', f'Holding record {self.pqid} has already been created. Use force flag to re-run.', True)
                 current_span.set_status(Status(StatusCode.ERROR))
                 current_span.add_event(f'Holding record {self.pqid} has already been created. Use force flag to re-run.')
-                return
+                return False
 		# Let the Job Monitor know that the job has started
         notifyJM.log('pass', f'Holding record creation for {self.pqid} for school {school} is beginning', verbose)
 
@@ -196,10 +198,14 @@ class DRSHoldingByDropbox():
             current_span.add_event(f'{metsFile} not found')
             current_span.add_event(f'skippping batch {batch} for school {school}')
             self.logger.error(f'{metsFile} not found for {batch}')
-            return
+            return False
 
 		# Get needed data from mets file
         marcXmlValues = self.getFromMets(metsFile, school)
+        if self.pqid:
+            marcXmlValues['proquestId'] = self.pqid
+        if self.object_urn:
+            marcXmlValues['object_urn'] = self.object_urn
 	
         if marcXmlValues:
 	
@@ -215,7 +221,7 @@ class DRSHoldingByDropbox():
                 notifyJM.log('fail', f"Writing DRS Holding MARCXML record for {batch} for {school} failed, skipping", True)
                 current_span.set_status(Status(StatusCode.ERROR))
                 current_span.add_event(f'Writing DRS Holding MARCXML record for {batch} for {school} failed, skipping')
-                return
+                return False
 
             # And then write xml record to collection file and update mongo
             if marcXmlRecord:
@@ -236,7 +242,7 @@ class DRSHoldingByDropbox():
                     current_span.add_event(f'Could not update proquest id {self.pqid} in {batch} for school {school} in mongo')
                     current_span.record_exception(e)
                     self.mongoutil.close_connection()
-                    raise e
+                    return False
 		
         drsHoldingSent = False			
         # If marcxml file was written successfully, finish xml records 
@@ -365,8 +371,6 @@ class DRSHoldingByDropbox():
         foundAll = True
         marcXmlValues = {}
 		
-        if self.pqid:
-            marcXmlValues['proquestId'] = self.pqid
         marcXmlValues['school'] = school
 
 		# Load mets file, get the root node and then parse
@@ -456,7 +460,7 @@ class DRSHoldingByDropbox():
 					# Datafield 909, proquest id
                     elif parent.attrib['tag'] == '909':
                         if child.attrib['code'] == 'k':
-                            childText  = child.text.replace('LIB_CODE_3_CHAR', schools[marcXmlValues['school']]['lib_code_3_char'])
+                            childText  = child.text.replace('LIB_CODE_3_CHAR', schools[marcXmlValues['school']]['lib_code_3_char'].lower())
                             child.text = childText
 		
 		# Write xml record out in batch directory

@@ -76,5 +76,5 @@ class TestDRSHoldingByDropbox():
             "Preservation object," \
             "URN-3:HUL.DRS.OBJECT:101115942"
         assert doc.xpath(libcodeXPath, namespaces=namespace_mapping)[0].text == \
-            "netDES"
+            "netdes"
         os.remove(marcFile)

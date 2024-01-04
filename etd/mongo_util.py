@@ -7,6 +7,7 @@ FIELD_SUBMISSION_STATUS = "alma_submission_status"
 FIELD_PQ_ID = "proquest_id"
 FIELD_SCHOOL_ALMA_DROPBOX = "school_alma_dropbox"
 FIELD_DIRECTORY_ID = "directory_id"
+FIELD_IN_DASH = "indash"
 DRS_HOLDING_DROPBOX_STATUS = "DRS_HOLDING_DROPBOX"
 DRS_HOLDING_API_STATUS = "DRS_HOLDING_API"
 ALMA_STATUS = "ALMA"
@@ -14,7 +15,7 @@ ALMA_STATUS = "ALMA"
 
 class MongoUtil():   # pragma: no cover, not used by unit tests
 
-    logger = logging.getLogger('etd_alma_monitor')
+    logger = logging.getLogger('etd_alma_drs_holding')
 
     def __init__(self):
         self.client = pymongo.MongoClient(os.getenv("MONGO_URL"))
