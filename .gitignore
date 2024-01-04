@@ -14,7 +14,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -167,3 +166,13 @@ cython_debug/
 .bash_history
 .pydevproject
 .local/
+
+.ssh/*
+!.ssh/.gitkeep
+logs/etd/*.log
+logs/etd/drsholding2alma*
+local/data/in/*
+!local/data/in/.keep
+local/data/out/*
+!local/data/out/.keep
+AlmaDRSDark*

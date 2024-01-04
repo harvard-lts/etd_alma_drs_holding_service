@@ -34,7 +34,7 @@ from lib.notify import notify
 # tracing setup
 JAEGER_NAME = os.getenv('JAEGER_NAME')
 JAEGER_SERVICE_NAME = os.getenv('JAEGER_SERVICE_NAME')
-notify.logDir = os.getenv("LOGFILE_PATH", "/home/etdadm/logs/etd_alma_drs_holding")
+notify.logDir = os.getenv("LOGFILE_PATH", "/home/etdadm/logs/etd")
 
 resource = Resource(attributes={SERVICE_NAME: JAEGER_SERVICE_NAME})
 provider = TracerProvider(resource=resource)
@@ -51,7 +51,6 @@ dropboxUser = os.getenv('DROPBOX_USER')
 dropboxServer = os.getenv('DROPBOX_SERVER')
 privateKey = os.getenv('PRIVATE_KEY_PATH')
 dataDir = os.getenv('DATA_DIR')
-filesDir = os.getenv('FILES_DIR')
 notifyJM = False
 jobCode = 'drsholding2alma'
 instance = os.getenv('INSTANCE', '')
@@ -228,21 +227,7 @@ class DRSHoldingByDropbox():
                 xmlCollectionOut.write(marcXmlRecord)
                 self.logger.debug(f'MARCXML record for {batch} for {school} added to collection file')
                 current_span.add_event(f'MARCXML record for {batch} for {school} added to collection file')
-				# Update mongo
-                self.logger.debug(f'Updating mongo...')
-                try:
-                    query = {mongo_util.FIELD_PQ_ID: self.pqid,
-                             mongo_util.FIELD_DIRECTORY_ID: batch}
-                    self.mongoutil.update_status(
-                        query, mongo_util.DRS_HOLDING_DROPBOX_STATUS)
-                    current_span.add_event(f'Status for Proquest id {self.pqid} in {batch} for school {school} updated in mongo')
-                except Exception as e:
-                    self.logger.error(f"Error updating status for {self.pqid}: {e}")
-                    current_span.set_status(Status(StatusCode.ERROR))
-                    current_span.add_event(f'Could not update proquest id {self.pqid} in {batch} for school {school} in mongo')
-                    current_span.record_exception(e)
-                    self.mongoutil.close_connection()
-                    return False
+                wroteXmlRecords = True
 		
         drsHoldingSent = False			
         # If marcxml file was written successfully, finish xml records 
@@ -258,7 +243,7 @@ class DRSHoldingByDropbox():
                 notifyJM.log('fail', xfer.error, True)
                 self.logger.error(xfer.error)
                 current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event(xfer.error)				
+                current_span.add_event(xfer.error)
             else:
                 targetFile = '/incoming/' + os.path.basename(xmlCollectionFile)
                 xfer.put_file(xmlCollectionFile, targetFile)
@@ -275,12 +260,31 @@ class DRSHoldingByDropbox():
                     current_span.add_event(f'{xmlCollectionFile} was sent to {dropboxUser}@{dropboxServer}:{targetFile}')
                     self.logger.debug("uploaded proquest id: " + str(marcXmlValues['proquestId']))
                     self.logger.debug("uploaded file: " + str(targetFile))
+                    current_span.add_event(f'{self.pqid} DRS holding was sent to Alma')
+                    self.logger.debug(f'{self.pqid} DRS holding was sent to Alma')
+                    notifyJM.log('pass', f'{self.pqid} DRS holding was sent to Alma', verbose)
+                    notifyJM.report('complete')
+                    current_span.add_event("completed")	
+                    drsHoldingSent = True
+                    # Update mongo
+                    self.logger.debug(f'Updating mongo...')
+                    try:
+                        query = {mongo_util.FIELD_PQ_ID: self.pqid,
+                                 mongo_util.FIELD_DIRECTORY_ID: batch}
+                        self.mongoutil.update_status(
+                            query, mongo_util.DRS_HOLDING_DROPBOX_STATUS)
+                        current_span.add_event(f'Status for Proquest id {self.pqid} in {batch} for school {school} updated in mongo')
+                    except Exception as e:
+                        self.logger.error(f"Error updating status for {self.pqid}: {e}")
+                        current_span.set_status(Status(StatusCode.ERROR))
+                        current_span.add_event(f'Could not update proquest id {self.pqid} in {batch} for school {school} in mongo')
+                        current_span.record_exception(e)
+                        self.mongoutil.close_connection()
+                        xfer.close()
+                        return False
+                    os.remove(xmlCollectionFile)
 
-            xfer.close()
-
-            drsHoldingSent = True
-            # Otherwise, remove file
-            os.remove(xmlCollectionFile)
+            xfer.close()     
         else:
             xmlCollectionOut.close()
             os.remove(xmlCollectionFile)
@@ -288,11 +292,7 @@ class DRSHoldingByDropbox():
             current_span.add_event("No DRS Holding to send to Alma")
             self.logger.debug("No DRS Holding to send to Alma")
 
-        current_span.add_event(f'{self.pqid} DRS holding was sent to Alma')
-        self.logger.debug(f'{self.pqid} DRS holding was sent to Alma')
-        notifyJM.log('pass', f'{self.pqid} DRS holding was sent to Alma', verbose)
-        notifyJM.report('complete')
-        current_span.add_event("completed")	
+        
 	
         # Returns True if the DRS Holding was sent, False otherwise
         return drsHoldingSent
@@ -402,7 +402,7 @@ class DRSHoldingByDropbox():
                         marcXmlValues['titleIndicator2'] = '0'
 
 		# Check that we found our needed values
-        for var in ('dateCreated', 'proquestId', 'title', 'school'):
+        for var in ('dateCreated', 'title', 'school'):
             if var not in marcXmlValues:
                 notifyJM.log('fail', f'Failed to find {var} in {metsFile}', True)
                 foundAll = False

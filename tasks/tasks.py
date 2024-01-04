@@ -124,7 +124,7 @@ def add_holdings(json_message):
                                   record in Alma.")
                     # Can't do task if it is missing.
                     return
-                if 'object_urn' in json_message:
+                if 'object_urn' not in json_message:
                     current_span.set_status(Status(StatusCode.ERROR))
                     current_span.add_event("Object URN is missing. \
                                             Cannot create DRS holding \
@@ -136,7 +136,7 @@ def add_holdings(json_message):
                     return
 
                 # Create the DRS holding record in Alma
-                create_drs_holding_record_in_alma(json_message['pqid'])
+                create_drs_holding_record_in_alma(json_message)
             else:
                 # Feature is off so do hello world
                 return invoke_hello_world(json_message)
@@ -166,7 +166,8 @@ def create_drs_holding_record_in_alma(json_message):
             current_span.add_event("Unable to find record in mongo")
             return
         in_dash = record_list[0][mongo_util.FIELD_IN_DASH]
-        if in_dash == "true":
+        logger.debug(record_list)
+        if in_dash:
             current_span.add_event(f"{pqid} is in DASH. Creating DRS Holding \
                                     record in Alma by dropbox")
             logger.info(f"{pqid} is in DASH. Creating DRS Holding \
