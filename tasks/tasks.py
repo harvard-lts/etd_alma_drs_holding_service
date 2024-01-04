@@ -104,11 +104,11 @@ def add_holdings(json_message):
             proquest_identifier = json_message['pqid']
             current_span.set_attribute("identifier", proquest_identifier)
             logger.debug("processing id: " + str(proquest_identifier))
-        
+
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
             if DRS_HOLDING_FEATURE_FLAG in feature_flags and \
-                feature_flags[DRS_HOLDING_FEATURE_FLAG] == "on":  # pragma: no cover, unit test should not create an Alma holding record # noqa: E501
+               feature_flags[DRS_HOLDING_FEATURE_FLAG] == "on":  # pragma: no cover, unit test should not create an Alma holding record # noqa: E501
                 # Create holding record
                 logger.debug("FEATURE IS ON>>>>> \
                 CREATE DRS HOLDING RECORD IN ALMA")
@@ -134,7 +134,7 @@ def add_holdings(json_message):
                                   record in Alma.")
                     # Can't do task if this is missing
                     return
-                    
+
                 # Create the DRS holding record in Alma
                 create_drs_holding_record_in_alma(json_message['pqid'])
             else:
@@ -144,6 +144,7 @@ def add_holdings(json_message):
             # No feature flags so do hello world for now
             return invoke_hello_world(json_message)
 
+
 def create_drs_holding_record_in_alma(json_message):
     current_span = trace.get_current_span()
     pqid = json_message['pqid']
@@ -151,7 +152,7 @@ def create_drs_holding_record_in_alma(json_message):
     mongoutil = MongoUtil()
     query = {mongo_util.FIELD_SUBMISSION_STATUS:
              mongo_util.ALMA_STATUS,
-			 mongo_util.FIELD_PQ_ID: pqid}
+             mongo_util.FIELD_PQ_ID: pqid}
     fields = {mongo_util.FIELD_PQ_ID: 1,
               mongo_util.FIELD_IN_DASH: 1}
     try:
@@ -163,7 +164,6 @@ def create_drs_holding_record_in_alma(json_message):
             logger.error(f"Unable to find record for {pqid}")
             current_span.set_status(Status(StatusCode.ERROR))
             current_span.add_event("Unable to find record in mongo")
-            current_span.record_exception(e)
             return
         in_dash = record_list[0][mongo_util.FIELD_IN_DASH]
         if in_dash == "true":
@@ -191,6 +191,7 @@ def create_drs_holding_record_in_alma(json_message):
         current_span.add_event(f"Unable to query mongo for DRS  \
                                holdings for pqid {pqid}")
         current_span.record_exception(e)
+
 
 def invoke_hello_world(json_message):
 

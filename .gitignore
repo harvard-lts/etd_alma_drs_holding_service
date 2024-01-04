@@ -166,3 +166,4 @@ cython_debug/
 
 .bash_history
 .pydevproject
+.local/
