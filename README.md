@@ -13,7 +13,9 @@ A Python service that assists in adding/updating drs hondings in Alma records fo
     
 1. Make a copy of the .env.example to .env and modify the user and password variables.
 
-2. Start the container
+2. Obtain the alma_dropbox_id_rsa and known_host keys for the .ssh directory (these can be found on the dev server)
+
+3. Start the container
     
 ```
 docker-compose -f docker-compose-local.yml up -d --build --force-recreate

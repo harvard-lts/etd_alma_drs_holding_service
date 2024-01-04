@@ -4,7 +4,7 @@ import os
 app1 = Celery('tasks')
 app1.config_from_object('celeryconfig')
 
-arguments = {"pqid": "0197490463", 
+arguments = {"pqid": "0197490463",
              "object_urn": "URN-3:HUL.DRS.OBJECT:101115924",
              "integration_test": True,
              "feature_flags": {
