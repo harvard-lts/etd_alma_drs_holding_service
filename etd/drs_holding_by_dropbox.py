@@ -96,7 +96,7 @@ class DRSHoldingByDropbox():
         self.object_urn = object_urn
         self.unittesting = unittesting
         if not unittesting:
-            self.mongoutil = MongoUtil() # pragma: no cover, unit testing doesn't use mongo # noqa
+            self.mongoutil = MongoUtil()  # pragma: no cover, unit testing doesn't use mongo # noqa
             if test_collection is not None:  # pragma: no cover, only changes collection # noqa
                 self.mongoutil.set_collection(self.mongoutil.db[test_collection])
 	
