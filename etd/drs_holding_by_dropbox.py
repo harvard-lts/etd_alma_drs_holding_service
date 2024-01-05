@@ -187,7 +187,7 @@ class DRSHoldingByDropbox():
 		# Let the Job Monitor know that the job has started
         notifyJM.log('pass', f'Holding record creation for {self.pqid} for school {school} is beginning', verbose)
 
-        batch = mongo_record_for_pqid[mongo_util.FIELD_DIRECTORY_ID]
+        batch = mongo_record_for_pqid[mongo_util.FIELD_DIRECTORY_ID].strip()
 		
         # Check for mets file and mapfile
         metsFile = f'{dataDir}/in/{batch}/mets.xml'
@@ -255,10 +255,10 @@ class DRSHoldingByDropbox():
                     self.logger.error(xfer.error)
                 else:
                     notifyJM.log('pass', f'{xmlCollectionFile} was sent to {dropboxUser}@{dropboxServer}:{targetFile}', verbose)
-                    current_span.set_attribute("uploaded_identifier", marcXmlValues['proquestId'])
+                    current_span.set_attribute("uploaded_identifier", self.pqid)
                     current_span.set_attribute("uploaded_file", targetFile)
                     current_span.add_event(f'{xmlCollectionFile} was sent to {dropboxUser}@{dropboxServer}:{targetFile}')
-                    self.logger.debug("uploaded proquest id: " + str(marcXmlValues['proquestId']))
+                    self.logger.debug("uploaded proquest id: " + str(self.pqid))
                     self.logger.debug("uploaded file: " + str(targetFile))
                     current_span.add_event(f'{self.pqid} DRS holding was sent to Alma')
                     self.logger.debug(f'{self.pqid} DRS holding was sent to Alma')
@@ -439,7 +439,7 @@ class DRSHoldingByDropbox():
 					# Datafield 035, Proquest ID
                     if parent.attrib['tag'] == '035':
                         if child.attrib['code'] == 'a':
-                            childText  = child.text.replace('PROQUEST_IDENTIFIER_VALUE', marcXmlValues['proquestId'])
+                            childText  = child.text.replace('PROQUEST_IDENTIFIER_VALUE', self.pqid)
                             child.text = childText
 
 					# Datafield 245, title and title indicator 2
@@ -452,10 +452,9 @@ class DRSHoldingByDropbox():
 
 					# Datafield 852
                     elif parent.attrib['tag'] == '852':
-                        if 'object_urn' in marcXmlValues: # print NET/ETD if there is a dash id
-                            if child.attrib['code'] == 'z':
-                                childText  = child.text.replace('[DRS OBJECT URN]', marcXmlValues['object_urn'])
-                                child.text = childText
+                        if child.attrib['code'] == 'z':
+                            childText  = child.text.replace('[DRS OBJECT URN]', self.object_urn)
+                            child.text = childText
 
 					# Datafield 909, proquest id
                     elif parent.attrib['tag'] == '909':

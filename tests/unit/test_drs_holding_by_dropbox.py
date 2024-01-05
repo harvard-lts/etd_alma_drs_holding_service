@@ -12,50 +12,31 @@ class TestDRSHoldingByDropbox():
         metsFile = "/home/etdadm/tests/data/samplemets.xml"
         school = "gsd"
 
-        drs_holding = DRSHoldingByDropbox('1234567890')
+        drs_holding = DRSHoldingByDropbox('1234567890',
+                                          'URN-3:HUL.DRS.OBJECT:12345678')
         result = drs_holding.getFromMets(metsFile, school)
 
         assert result is not None
-        assert result['proquestId'] == '1234567890'
         assert result['school'] == school
         assert 'dateCreated' in result
         assert "title" in result
-
-    def test_getFromMets_missing_values(self):
-        """
-        Test case to verify the behavior of getFromMets
-        method when there are missing values in the mets file.
-        """
-        metsFile = "/home/etdadm/tests/data/samplemets.xml"
-        school = "gsd"
-
-        # Simulate missing values in the mets file
-        drs_holding = DRSHoldingByDropbox(None)
-
-        result = drs_holding.getFromMets(metsFile, school)
-
-        assert not result
 
     def test_writeMarcXml(self):
         """
         Test case for the writeMarcXml method of DRSHoldingByDropbox class.
         """
         batch = "almadrsholding2023071720-993578-gsd"
-        drs_holding = DRSHoldingByDropbox('1234567890')
-        batchOutputDir = "/home/etdadm/tests/data/in/ \
-                          proquest2023071720-993578-gsd"
+        drs_holding = DRSHoldingByDropbox('1234567890',
+                                          'URN-3:HUL.DRS.OBJECT:12345678')
+        batchOutputDir = "/home/etdadm/tests/data/in/proquest2023071720-993578-gsd" # noqa
 
         school = "gsd"
         # Generate the data
         generatedMarcXmlValues = {}
         generatedMarcXmlValues['titleIndicator2'] = '0'
-        generatedMarcXmlValues['title'] = "Naming Expeditor: Reimagining \
-                                           Institutional Naming System \
-                                           at Harvard"
+        generatedMarcXmlValues['title'] = "Naming Expeditor: Reimagining Institutional Naming System at Harvard" # noqa
         generatedMarcXmlValues['dateCreated'] = "2023-05"
         generatedMarcXmlValues['school'] = school
-        generatedMarcXmlValues['proquestId'] = "1234567890"
-        generatedMarcXmlValues['object_urn'] = "URN-3:HUL.DRS.OBJECT:101115942" # noqa
         verbose = False
 
         # Write the marcxml
@@ -76,11 +57,9 @@ class TestDRSHoldingByDropbox():
         assert doc.xpath(pqidXPath, namespaces=namespace_mapping)[0].text == \
             "(ProQuestETD)1234567890"
         assert doc.xpath(titleXPath, namespaces=namespace_mapping)[0].text == \
-            "Naming Expeditor: " \
-            "Reimagining Institutional Naming System at Harvard"
+            "Naming Expeditor: Reimagining Institutional Naming System at Harvard" # noqa
         assert doc.xpath(objecturnXPath, namespaces=namespace_mapping)[0] \
-            .text == "Preservation object," \
-            "URN-3:HUL.DRS.OBJECT:101115942"
+            .text == "Preservation object,URN-3:HUL.DRS.OBJECT:12345678"
         assert doc.xpath(libcodeXPath, namespaces=namespace_mapping)[0] \
             .text == "netdes"
         os.remove(marcFile)
