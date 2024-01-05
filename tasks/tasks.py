@@ -145,7 +145,7 @@ def add_holdings(json_message):
             return invoke_hello_world(json_message)
 
 
-def create_drs_holding_record_in_alma(json_message): # pragma: no cover, not sending to alma in unit tests
+def create_drs_holding_record_in_alma(json_message): # pragma: no cover, not sending to alma in unit tests # noqa: E501
     current_span = trace.get_current_span()
     pqid = json_message['pqid']
     object_urn = json_message['object_urn']
