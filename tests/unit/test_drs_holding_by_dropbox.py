@@ -9,7 +9,7 @@ class TestDRSHoldingByDropbox():
         """
         Test case for the getFromMets method of DRSHoldingByDropbox class.
         """
-        metsFile = "/home/etdadm/tests/data/samplemets.xml"
+        metsFile = "./tests/data/samplemets.xml"
         school = "gsd"
 
         drs_holding = DRSHoldingByDropbox('1234567890',
@@ -32,7 +32,7 @@ class TestDRSHoldingByDropbox():
                                           'URN-3:HUL.DRS.OBJECT:12345678',
                                           None,
                                           True)
-        batchOutputDir = "/home/etdadm/tests/data/in/proquest2023071720-993578-gsd" # noqa
+        batchOutputDir = "./tests/data/in/proquest2023071720-993578-gsd" # noqa
 
         school = "gsd"
         # Generate the data
