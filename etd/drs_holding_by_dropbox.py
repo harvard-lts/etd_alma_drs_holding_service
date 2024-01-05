@@ -45,7 +45,7 @@ trace.set_tracer_provider(provider)
 tracer = trace.get_tracer(__name__)
 
 almaMarcxmlTemplate = os.getenv('ALMA_MARCXML_DRSHOLDING_TEMPLATE',
-								"/home/etdadm/templates/" \
+								"./templates/" \
 								"alma_marcxml_drsholding_template.xml")
 dropboxUser = os.getenv('DROPBOX_USER')
 dropboxServer = os.getenv('DROPBOX_SERVER')
