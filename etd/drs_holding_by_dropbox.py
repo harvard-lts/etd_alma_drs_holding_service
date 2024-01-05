@@ -90,13 +90,15 @@ This the worker class for the etd alma service.
 class DRSHoldingByDropbox():
     logger = logging.getLogger('etd_alma_drs_holding')
 
-    def __init__(self, pqid, object_urn, test_collection=None):
+    def __init__(self, pqid, object_urn, test_collection=None, unittesting=False):
         configure_logger()
-        self.mongoutil = MongoUtil()
         self.pqid = pqid
         self.object_urn = object_urn
-        if test_collection is not None:  # pragma: no cover, only changes collection # noqa
-            self.mongoutil.set_collection(self.mongoutil.db[test_collection])
+        self.unittesting = unittesting
+        if not unittesting:
+            self.mongoutil = MongoUtil()
+            if test_collection is not None:  # pragma: no cover, only changes collection # noqa
+                self.mongoutil.set_collection(self.mongoutil.db[test_collection])
 	
     @tracer.start_as_current_span("send_holding_to_alma_worker")
     def send_to_alma(self, message):  # pragma: no cover
@@ -268,20 +270,21 @@ class DRSHoldingByDropbox():
                     drsHoldingSent = True
                     # Update mongo
                     self.logger.debug(f'Updating mongo...')
-                    try:
-                        query = {mongo_util.FIELD_PQ_ID: self.pqid,
-                                 mongo_util.FIELD_DIRECTORY_ID: batch}
-                        self.mongoutil.update_status(
-                            query, mongo_util.DRS_HOLDING_DROPBOX_STATUS)
-                        current_span.add_event(f'Status for Proquest id {self.pqid} in {batch} for school {school} updated in mongo')
-                    except Exception as e:
-                        self.logger.error(f"Error updating status for {self.pqid}: {e}")
-                        current_span.set_status(Status(StatusCode.ERROR))
-                        current_span.add_event(f'Could not update proquest id {self.pqid} in {batch} for school {school} in mongo')
-                        current_span.record_exception(e)
-                        self.mongoutil.close_connection()
-                        xfer.close()
-                        return False
+                    if not self.unittesting:
+                        try:
+                            query = {mongo_util.FIELD_PQ_ID: self.pqid,
+                                     mongo_util.FIELD_DIRECTORY_ID: batch}
+                            self.mongoutil.update_status(
+                                query, mongo_util.DRS_HOLDING_DROPBOX_STATUS)
+                            current_span.add_event(f'Status for Proquest id {self.pqid} in {batch} for school {school} updated in mongo')
+                        except Exception as e:
+                            self.logger.error(f"Error updating status for {self.pqid}: {e}")
+                            current_span.set_status(Status(StatusCode.ERROR))
+                            current_span.add_event(f'Could not update proquest id {self.pqid} in {batch} for school {school} in mongo')
+                            current_span.record_exception(e)
+                            self.mongoutil.close_connection()
+                            xfer.close()
+                            return False
                     os.remove(xmlCollectionFile)
 
             xfer.close()     

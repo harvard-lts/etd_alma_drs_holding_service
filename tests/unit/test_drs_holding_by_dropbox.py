@@ -13,7 +13,9 @@ class TestDRSHoldingByDropbox():
         school = "gsd"
 
         drs_holding = DRSHoldingByDropbox('1234567890',
-                                          'URN-3:HUL.DRS.OBJECT:12345678')
+                                          'URN-3:HUL.DRS.OBJECT:12345678',
+                                          None,
+                                          True)
         result = drs_holding.getFromMets(metsFile, school)
 
         assert result is not None
@@ -27,7 +29,9 @@ class TestDRSHoldingByDropbox():
         """
         batch = "almadrsholding2023071720-993578-gsd"
         drs_holding = DRSHoldingByDropbox('1234567890',
-                                          'URN-3:HUL.DRS.OBJECT:12345678')
+                                          'URN-3:HUL.DRS.OBJECT:12345678',
+                                          None,
+                                          True)
         batchOutputDir = "/home/etdadm/tests/data/in/proquest2023071720-993578-gsd" # noqa
 
         school = "gsd"
