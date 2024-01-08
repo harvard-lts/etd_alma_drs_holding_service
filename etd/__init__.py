@@ -14,7 +14,7 @@ timestamp = datetime.today().strftime('%Y-%m-%d')
 def configure_logger():  # pragma: no cover
     log_level = os.getenv("APP_LOG_LEVEL", "WARNING")
     log_file_path = os.getenv("LOGFILE_PATH",
-                              "/home/etdadm/logs/etd_alma_drs_holding")
+                              "/home/etdadm/logs/etd")
     formatter = logging.Formatter(
                 '%(asctime)s - %(name)s - %(levelname)s - ' +
                 '[%(filename)s:%(funcName)s:%(lineno)d] - %(message)s')

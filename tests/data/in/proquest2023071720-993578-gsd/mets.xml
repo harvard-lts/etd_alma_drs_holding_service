@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<mets xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ID="etd-mets-1" OBJID="etd-submission-993578" TYPE="DSpace ITEM" PROFILE="http://www.dspace.org/schema/aip/mets_aip_1_0.xsd" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+  <metsHdr CREATEDATE="2023-06-14T18:08:56-04:00">
+    <agent ROLE="CREATOR" TYPE="OTHER">
+      <name>ETD Administrator, ProQuest</name>
+    </agent>
+  </metsHdr>
+  <dmdSec ID="etdadmin-mets-dmd-1" GROUPID="etdadmin-mets-dmd-1">
+    <mdWrap LABEL="DIM Metadata" MDTYPE="OTHER" OTHERMDTYPE="DIM">
+      <xmlData xmlns:dim="http://www.dspace.org/xmlns/dspace/dim">
+        <dim:dim>
+          <dim:field mdschema="dc" element="contributor" qualifier="author" authority="">Peng, Yolanda Yuanlu</dim:field>
+          <dim:field mdschema="dc" element="identifier" qualifier="other">30522803</dim:field>
+          <dim:field mdschema="dc" element="title">Naming Expeditor: Reimagining Institutional Naming System at Harvard</dim:field>
+          <dim:field mdschema="dc" element="description" qualifier="abstract">The "Naming Expeditor" project aims to demystify the institutional process and principles of naming, including denaming and renaming, at Harvard University.
+Through research on historical archives and contemporary testimonies, the project seeks to understand the meaning-constructive nature of naming as a dynamic and iterative device in the public realm.
+By integrating theories and practices from the realms of art and activism, the project explores alternative channels, forms, and tools to reimagine a collective naming process and system that amplifies community voices with increased awareness, democracy, and participation.
+The project's final deliverable contains an image essay analyzing the current institutional naming system at Harvard and proposing the niche and strategies of an agency named "Naming Expeditor", as well as a live performance,
+aiming to display the power behind the texts in the existing institutional naming system, and evoke public discussion and actions in the broader community.</dim:field>
+          <dim:field mdschema="dc" element="subject">art and activism</dim:field>
+          <dim:field mdschema="dc" element="subject">community engagement</dim:field>
+          <dim:field mdschema="dc" element="subject">denaming</dim:field>
+          <dim:field mdschema="dc" element="subject">institutional critique</dim:field>
+          <dim:field mdschema="dc" element="subject">philanthropy</dim:field>
+          <dim:field mdschema="dc" element="subject" qualifier="PQ">Design</dim:field>
+          <dim:field mdschema="dc" element="subject" qualifier="PQ">Social research</dim:field>
+          <dim:field mdschema="dc" element="contributor" qualifier="advisor">Shoshan, Malkit</dim:field>
+          <dim:field mdschema="dc" element="contributor" qualifier="committeeMember">Bruguera, Tania</dim:field>
+          <dim:field mdschema="dc" element="contributor" qualifier="committeeMember">Dhillon, Nitasha</dim:field>
+          <dim:field mdschema="dc" element="contributor" qualifier="committeeMember">Wodiczko, Krzysztof</dim:field>
+          <dim:field mdschema="dc" element="contributor" qualifier="committeeMember">Naginski, Erika</dim:field>
+          <dim:field mdschema="dc" element="contributor" qualifier="committeeMember">Claudio, Yazmin C</dim:field>
+          <dim:field mdschema="dc" element="date" qualifier="created">2023</dim:field>
+          <dim:field mdschema="dc" element="date" qualifier="submitted">2023</dim:field>
+          <dim:field mdschema="dc" element="date" qualifier="issued">2023-06-14</dim:field>
+          <dim:field mdschema="dc" element="format" qualifier="mimetype">application/pdf</dim:field>
+          <dim:field mdschema="dc" element="language" qualifier="iso">en</dim:field>
+          <dim:field mdschema="dc" element="type" qualifier="material">text</dim:field>
+          <dim:field mdschema="dc" element="type">Thesis or Dissertation</dim:field>
+          <dim:field mdschema="dc" element="description" qualifier="provenance">Submission originally under a zero month embargo, it is available immediately.</dim:field>
+          <dim:field mdschema="dc" element="description" qualifier="provenance">The student, 2541825, accepted the attached license on 2023-05-21 at 19:16.</dim:field>
+          <dim:field mdschema="dc" element="description" qualifier="provenance">The student, Peng, Yolanda Yuanlu, submitted this Dissertation for approval on 2023-05-21 at 22:48.</dim:field>
+          <dim:field mdschema="dc" element="description" qualifier="provenance">2023-06-14</dim:field>
+          <dim:field mdschema="dc" element="description" qualifier="provenance">DSpace AIP METS Submission Ingestion Package generated from ETD Administrator submission #993578 on 2023-06-14 at 18:08:56</dim:field>
+          <dim:field mdschema="thesis" element="degree" qualifier="date">2023-05</dim:field>
+          <dim:field mdschema="thesis" element="degree" qualifier="grantor">Harvard Graduate School of Design</dim:field>
+          <dim:field mdschema="thesis" element="degree" qualifier="level">Master's</dim:field>
+          <dim:field mdschema="thesis" element="degree" qualifier="name">MDes</dim:field>
+          <dim:field mdschema="thesis" element="degree" qualifier="department">Department of Urban Planning and Design</dim:field>
+          <dim:field mdschema="dash" element="depositing" qualifier="author" authority="">Peng, Yolanda Yuanlu</dim:field>
+          <dim:field mdschema="dash" element="author" qualifier="email" authority="">yolandayuanlupeng@gmail.com</dim:field>
+          <dim:field mdschema="dash" element="license">LAA</dim:field>
+        </dim:dim>
+      </xmlData>
+    </mdWrap>
+  </dmdSec>
+  <amdSec ID="amd_whole_item">
+    <rightsMD ID="rightsMD_whole_item">
+      <mdWrap MDTYPE="OTHER" OTHERMDTYPE="METSRIGHTS">
+        <xmlData xmlns:rights="http://cosimo.stanford.edu/sdr/metsrights/" xsi:schemaLocation="http://cosimo.stanford.edu/sdr/metsrights/ http://www.loc.gov/standards/rights/METSRights.xsd">
+          <rights:RightsDeclarationMD RIGHTSCATEGORY="LICENSED">
+            <rights:Context in-effect="true" CONTEXTCLASS="GENERAL PUBLIC">
+              <rights:Permissions DISCOVER="true" DISPLAY="true" MODIFY="false" DELETE="false"/>
+            </rights:Context>
+          </rights:RightsDeclarationMD>
+        </xmlData>
+      </mdWrap>
+    </rightsMD>
+    <sourceMD ID="sourceMD_whole_item">
+      <mdWrap MDTYPE="OTHER" OTHERMDTYPE="AIP-TECHMD">
+        <xmlData xmlns:dim="http://www.dspace.org/xmlns/dspace/dim">
+          <dim:dim dspaceType="ITEM">
+            <dim:field mdschema="dc" element="creator">disspub@proquest.com</dim:field>
+          </dim:dim>
+        </xmlData>
+      </mdWrap>
+    </sourceMD>
+  </amdSec>
+  <amdSec ID="amd_primary">
+    <rightsMD ID="rightsMD_primary">
+      <mdWrap MDTYPE="OTHER" OTHERMDTYPE="METSRIGHTS">
+        <xmlData xmlns:rights="http://cosimo.stanford.edu/sdr/metsrights/" xsi:schemaLocation="http://cosimo.stanford.edu/sdr/metsrights/ http://www.loc.gov/standards/rights/METSRights.xsd">
+          <rights:RightsDeclarationMD RIGHTSCATEGORY="LICENSED">
+            <rights:Context in-effect="true" CONTEXTCLASS="MANAGED GRP">
+              <rights:UserName USERTYPE="GROUP">Staff</rights:UserName>
+              <rights:Permissions DISCOVER="true" DISPLAY="true" MODIFY="false" DELETE="false"/>
+            </rights:Context>
+            <rights:Context in-effect="true" CONTEXTCLASS="GENERAL PUBLIC">
+              <rights:Permissions DISCOVER="true" DISPLAY="true" MODIFY="false" DELETE="false"/>
+            </rights:Context>
+          </rights:RightsDeclarationMD>
+        </xmlData>
+      </mdWrap>
+    </rightsMD>
+    <sourceMD ID="sourceMD_primary">
+      <mdWrap MDTYPE="OTHER" OTHERMDTYPE="AIP-TECHMD">
+        <xmlData xmlns:dim="http://www.dspace.org/xmlns/dspace/dim">
+          <dim:dim dspaceType="BITSTREAM">
+            <dim:field mdschema="dc" element="title">0521Yolandayuanlupeng_finalNaming Expeditor.pdf</dim:field>
+            <dim:field mdschema="dc" element="format" qualifier="mimetype">application/pdf</dim:field>
+            <dim:field mdschema="dc" element="format" qualifier="supportlevel">KNOWN</dim:field>
+            <dim:field mdschema="dc" element="format" qualifier="internal">false</dim:field>
+          </dim:dim>
+        </xmlData>
+      </mdWrap>
+    </sourceMD>
+  </amdSec>
+  <amdSec ID="amd_license_2265697">
+    <rightsMD ID="rightsMD_license_2265697">
+      <mdWrap MDTYPE="OTHER" OTHERMDTYPE="METSRIGHTS">
+        <xmlData xmlns:rights="http://cosimo.stanford.edu/sdr/metsrights/" xsi:schemaLocation="http://cosimo.stanford.edu/sdr/metsrights/ http://www.loc.gov/standards/rights/METSRights.xsd">
+          <rights:RightsDeclarationMD RIGHTSCATEGORY="LICENSED"/>
+        </xmlData>
+      </mdWrap>
+    </rightsMD>
+    <sourceMD ID="sourceMD_license_2265697">
+      <mdWrap MDTYPE="OTHER" OTHERMDTYPE="AIP-TECHMD">
+        <xmlData xmlns:dim="http://www.dspace.org/xmlns/dspace/dim">
+          <dim:dim dspaceType="BITSTREAM">
+            <dim:field mdschema="dc" element="title">setup_2E592954-F85C-11EA-ABB1-E61AE629DA94.pdf</dim:field>
+            <dim:field mdschema="dc" element="format" qualifier="mimetype">application/pdf</dim:field>
+          </dim:dim>
+        </xmlData>
+      </mdWrap>
+    </sourceMD>
+  </amdSec>
+  <fileSec>
+    <fileGrp ID="etdadmin-mets-fgrp-1" USE="CONTENT">
+      <file GROUPID="etdadmin-mets-file-group" ID="etdadmin-mets-file-2354973" MIMETYPE="application/pdf" ADMID="amd_primary" SEQ="1">
+        <FLocat LOCTYPE="URL" xlink:href="0521Yolandayuanlupeng_finalNaming Expeditor.pdf"/>
+      </file>
+    </fileGrp>
+    <fileGrp ID="etdadmin-mets-fgrp-2" USE="LICENSE">
+      <file GROUPID="etdadmin-mets-file-group" ID="etdadmin-mets-file-2265697" MIMETYPE="application/pdf" ADMID="amd_license_2265697">
+        <FLocat LOCTYPE="URL" xlink:href="setup_2E592954-F85C-11EA-ABB1-E61AE629DA94.pdf"/>
+      </file>
+    </fileGrp>
+  </fileSec>
+  <structMap ID="etdadmin-mets-struct-1" LABEL="structure" TYPE="LOGICAL">
+    <div ID="etdadmin-mets-div-1" DMDID="etdadmin-mets-dmd-1" TYPE="DSpace Item">
+      <fptr FILEID="etdadmin-mets-file-2354973"/>
+      <div ID="etdadmin-mets-div-2354973" TYPE="DSpace Content Bitstream">
+        <fptr FILEID="etdadmin-mets-file-2354973"/>
+      </div>
+    </div>
+  </structMap>
+</mets>

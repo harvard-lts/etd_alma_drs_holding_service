@@ -16,6 +16,11 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.trace.propagation.tracecontext \
     import TraceContextTextMapPropagator
+from opentelemetry.trace import Status
+from opentelemetry.trace import StatusCode
+from etd.drs_holding_by_dropbox import DRSHoldingByDropbox
+from etd.mongo_util import MongoUtil
+import etd.mongo_util as mongo_util
 
 app = Celery()
 app.config_from_object('celeryconfig')
@@ -24,7 +29,6 @@ logger = logging.getLogger('etd_alma_drs_holding')
 
 FEATURE_FLAGS = "feature_flags"
 DRS_HOLDING_FEATURE_FLAG = "drs_holding_record_feature_flag"
-SEND_TO_DRS_FEATURE_FLAG = "send_to_drs_feature_flag"
 
 # tracing setup
 JAEGER_NAME = os.getenv('JAEGER_NAME')
@@ -100,25 +104,39 @@ def add_holdings(json_message):
             proquest_identifier = json_message['pqid']
             current_span.set_attribute("identifier", proquest_identifier)
             logger.debug("processing id: " + str(proquest_identifier))
+
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
             if DRS_HOLDING_FEATURE_FLAG in feature_flags and \
-                    feature_flags[DRS_HOLDING_FEATURE_FLAG] == "on":  # pragma: no cover, unit test should not create an Alma holding record # noqa: E501
-                if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
-                        feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":
-                    # Create holding record
-                    logger.debug("FEATURE IS ON>>>>> \
-                    CREATE DRS HOLDING RECORD IN ALMA")
-                    current_span.add_event("FEATURE IS ON>>>>> \
-                    CREATE DRS HOLDING RECORD IN ALMA")
-                else:
-                    logger.debug("send_to_drs_feature_flag MUST BE ON \
-                    FOR THE ALMA HOLDING TO BE CREATED. \
-                    send_to_drs_feature_flag IS SET TO OFF")
-                    current_span.add_event("send_to_drs_feature_flag \
-                    MUST BE ON \
-                    FOR THE ALMA HOLDING TO BE CREATED. \
-                    send_to_drs_feature_flag IS SET TO OFF")
+               feature_flags[DRS_HOLDING_FEATURE_FLAG] == "on":  # pragma: no cover, unit test should not create an Alma holding record # noqa: E501
+                # Create holding record
+                logger.debug("FEATURE IS ON>>>>> \
+                CREATE DRS HOLDING RECORD IN ALMA")
+                current_span.add_event("FEATURE IS ON>>>>> \
+                CREATE DRS HOLDING RECORD IN ALMA")
+                if 'pqid' not in json_message:
+                    current_span.set_status(Status(StatusCode.ERROR))
+                    current_span.add_event("Proquest ID is missing. \
+                                            Cannot create DRS holding \
+                                            record in Alma.")
+                    logger.debug("Proquest ID is missing. \
+                                  Cannot create DRS holding \
+                                  record in Alma.")
+                    # Can't do task if it is missing.
+                    return
+                if 'object_urn' not in json_message:
+                    current_span.set_status(Status(StatusCode.ERROR))
+                    current_span.add_event("Object URN is missing. \
+                                            Cannot create DRS holding \
+                                            record in Alma.")
+                    logger.debug("Object URN is missing. \
+                                  Cannot create DRS holding \
+                                  record in Alma.")
+                    # Can't do task if this is missing
+                    return
+
+                # Create the DRS holding record in Alma
+                create_drs_holding_record_in_alma(json_message)
             else:
                 # Feature is off so do hello world
                 return invoke_hello_world(json_message)
@@ -127,7 +145,55 @@ def add_holdings(json_message):
             return invoke_hello_world(json_message)
 
 
-# To be removed when real logic takes its place
+def create_drs_holding_record_in_alma(json_message):  # pragma: no cover, not sending to alma in unit tests # noqa: E501
+    current_span = trace.get_current_span()
+    pqid = json_message['pqid']
+    object_urn = json_message['object_urn']
+    mongoutil = MongoUtil()
+    query = {mongo_util.FIELD_SUBMISSION_STATUS:
+             mongo_util.ALMA_STATUS,
+             mongo_util.FIELD_PQ_ID: pqid}
+    fields = {mongo_util.FIELD_PQ_ID: 1,
+              mongo_util.FIELD_IN_DASH: 1}
+    try:
+        matching_records = mongoutil.query_records(query, fields)
+        record_list = list(matching_records)
+        if len(record_list) > 1:
+            logger.warn(f"Found {len(record_list)} for {pqid}")
+        if (len(record_list) == 0):
+            logger.error(f"Unable to find record for {pqid}")
+            current_span.set_status(Status(StatusCode.ERROR))
+            current_span.add_event("Unable to find record in mongo")
+            return
+        in_dash = record_list[0][mongo_util.FIELD_IN_DASH]
+        logger.debug(record_list)
+        if in_dash:
+            current_span.add_event(f"{pqid} is in DASH. Creating DRS Holding \
+                                    record in Alma by dropbox")
+            logger.info(f"{pqid} is in DASH. Creating DRS Holding \
+                                    record in Alma by dropbox")
+            # Create the DRS holding record in Alma
+            drs_holding = DRSHoldingByDropbox(pqid, object_urn)
+            sent = drs_holding.send_to_alma(json_message)
+            if not sent:
+                current_span.set_status(Status(StatusCode.ERROR))
+                current_span.add_event("Unable to create DRS holding record \
+                                        in Alma by dropbox")
+                logger.error("Unable to create DRS holding record \
+                                        in Alma by dropbox")
+        else:
+            current_span.add_event(f"{pqid} is NOT in DASH. Updating \
+                                    DRS Holding record in Alma by API")
+            logger.info(f"{pqid} is NOT in DASH. Updating \
+                                    DRS Holding record in Alma by API")
+    except Exception as e:
+        logger.error(f"Error querying records: {e}")
+        current_span.set_status(Status(StatusCode.ERROR))
+        current_span.add_event(f"Unable to query mongo for DRS  \
+                               holdings for pqid {pqid}")
+        current_span.record_exception(e)
+
+
 def invoke_hello_world(json_message):
 
     ctx = None
