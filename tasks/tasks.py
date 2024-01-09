@@ -105,41 +105,36 @@ def add_holdings(json_message):
             current_span.set_attribute("identifier", proquest_identifier)
             logger.debug("processing id: " + str(proquest_identifier))
 
-        if FEATURE_FLAGS in json_message:
-            feature_flags = json_message[FEATURE_FLAGS]
-            if DRS_HOLDING_FEATURE_FLAG in feature_flags and \
-               feature_flags[DRS_HOLDING_FEATURE_FLAG] == "on":  # pragma: no cover, unit test should not create an Alma holding record # noqa: E501
-                # Create holding record
-                logger.debug("FEATURE IS ON>>>>> \
-                CREATE DRS HOLDING RECORD IN ALMA")
-                current_span.add_event("FEATURE IS ON>>>>> \
-                CREATE DRS HOLDING RECORD IN ALMA")
-                if 'pqid' not in json_message:
-                    current_span.set_status(Status(StatusCode.ERROR))
-                    current_span.add_event("Proquest ID is missing. \
-                                            Cannot create DRS holding \
-                                            record in Alma.")
-                    logger.debug("Proquest ID is missing. \
-                                  Cannot create DRS holding \
-                                  record in Alma.")
-                    # Can't do task if it is missing.
-                    return
-                if 'object_urn' not in json_message:
-                    current_span.set_status(Status(StatusCode.ERROR))
-                    current_span.add_event("Object URN is missing. \
-                                            Cannot create DRS holding \
-                                            record in Alma.")
-                    logger.debug("Object URN is missing. \
-                                  Cannot create DRS holding \
-                                  record in Alma.")
-                    # Can't do task if this is missing
-                    return
+        feature_flag = os.getenv("DRS_HOLDING_RECORD_FEATURE_FLAG", "off")
+        if feature_flag == "on":  # pragma: no cover, unit test should not create an Alma holding record # noqa: E501
+        # Create holding record
+            logger.debug("FEATURE IS ON>>>>> \
+                          CREATE DRS HOLDING RECORD IN ALMA")
+            current_span.add_event("FEATURE IS ON>>>>> \
+                                    CREATE DRS HOLDING RECORD IN ALMA")
+            if 'pqid' not in json_message:
+                current_span.set_status(Status(StatusCode.ERROR))
+                current_span.add_event("Proquest ID is missing. \
+                                        Cannot create DRS holding \
+                                        record in Alma.")
+                logger.debug("Proquest ID is missing. \
+                              Cannot create DRS holding \
+                              record in Alma.")
+                # Can't do task if it is missing.
+                return
+            if 'object_urn' not in json_message:
+                current_span.set_status(Status(StatusCode.ERROR))
+                current_span.add_event("Object URN is missing. \
+                                        Cannot create DRS holding \
+                                        record in Alma.")
+                logger.debug("Object URN is missing. \
+                              Cannot create DRS holding \
+                              record in Alma.")
+                # Can't do task if this is missing
+                return
 
-                # Create the DRS holding record in Alma
-                create_drs_holding_record_in_alma(json_message)
-            else:
-                # Feature is off so do hello world
-                return invoke_hello_world(json_message)
+            # Create the DRS holding record in Alma
+            create_drs_holding_record_in_alma(json_message)
         else:
             # No feature flags so do hello world for now
             return invoke_hello_world(json_message)
