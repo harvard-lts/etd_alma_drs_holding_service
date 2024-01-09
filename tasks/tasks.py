@@ -107,7 +107,7 @@ def add_holdings(json_message):
 
         feature_flag = os.getenv("DRS_HOLDING_RECORD_FEATURE_FLAG", "off")
         if feature_flag == "on":  # pragma: no cover, unit test should not create an Alma holding record # noqa: E501
-        # Create holding record
+            # Create holding record
             logger.debug("FEATURE IS ON>>>>> \
                           CREATE DRS HOLDING RECORD IN ALMA")
             current_span.add_event("FEATURE IS ON>>>>> \
