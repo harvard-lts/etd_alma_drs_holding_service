@@ -19,6 +19,7 @@ from opentelemetry.trace.propagation.tracecontext \
 from opentelemetry.trace import Status
 from opentelemetry.trace import StatusCode
 from etd.drs_holding_by_dropbox import DRSHoldingByDropbox
+from etd.drs_holding_by_api import DRSHoldingByAPI
 from etd.mongo_util import MongoUtil
 import etd.mongo_util as mongo_util
 
@@ -181,6 +182,15 @@ def create_drs_holding_record_in_alma(json_message):  # pragma: no cover, not se
                                     DRS Holding record in Alma by API")
             logger.info(f"{pqid} is NOT in DASH. Updating \
                                     DRS Holding record in Alma by API")
+            # Create the DRS holding record in Alma
+            drs_holding = DRSHoldingByAPI(pqid, object_urn)
+            sent = drs_holding.send_to_alma(json_message)
+            if not sent:
+                current_span.set_status(Status(StatusCode.ERROR))
+                current_span.add_event("Unable to create DRS holding record \
+                                        in Alma by API")
+                logger.error("Unable to create DRS holding record \
+                                        in Alma by API")
     except Exception as e:
         logger.error(f"Error querying records: {e}")
         current_span.set_status(Status(StatusCode.ERROR))
