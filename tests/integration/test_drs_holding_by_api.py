@@ -66,4 +66,3 @@ class TestDRSHoldingByAPI():
         drs_holding = DRSHoldingByAPI(pqid, object_urn, True)
         assert drs_holding.confirm_new_drs_holding(pqid, mms_id, holding_id,
                                                    object_urn)
-
