@@ -61,7 +61,7 @@ FEATURE_FLAGS = "feature_flags"
 ALMA_FEATURE_FORCE_UPDATE_FLAG = "alma_feature_force_update_flag"
 ALMA_FEATURE_VERBOSE_FLAG = "alma_feature_verbose_flag"
 INTEGRATION_TEST = os.getenv('MONGO_DB_COLLECTION_ITEST', 'integration_test')
-data_dir = os.getenv('DATA_DIR', '/home/etdadm/data')
+data_dir = os.getenv('DATA_DIR', './')
 
 notifyJM = False
 jobCode = 'drsholding2alma'
