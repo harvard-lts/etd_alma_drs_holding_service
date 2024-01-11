@@ -443,7 +443,7 @@ class DRSHoldingByAPI():
 
     
     @tracer.start_as_current_span("confirm_new_drs_holding")
-    def confirm_new_drs_holding(self, pqid):
+    def confirm_new_drs_holding(self, pqid, mms_id, holding_id, urn):
         """
         This method confirms the new drs holding is in alma with an urn attached.
 
@@ -456,22 +456,25 @@ class DRSHoldingByAPI():
             current_span.add_event("confirming drs holding")
             current_span.set_attribute("identifier", pqid)
         self.logger.debug("confirming new drs holding")
-        r = requests.get(ALMA_SRU_MARCXML_BASE + pqid)
+        r = requests.get(ALMA_API_BASE + ALMA_GET_BIB_BASE + mms_id +
+                         ALMA_GET_HOLDINGS_PATH + "/" + holding_id +
+                         "?apikey=" + ALMA_API_KEY_2)
         sru_file = f'{self.output_dir}/src_marc.xml'
         if r.status_code == 200:
             with open(sru_file, 'wb') as f:
                 f.write(r.content)
         else:
             self.logger.error("Error getting updated DRS holding for pqid: " +
-                              self.pqid)
+                              pqid)
             return False
 
-        urn_xpath = "//marc:record/marc:datafield[@tag='852']" \
-                      "/marc:subfield[@code='z']"
+        urn_xpath = "//record/datafield[@tag='852']" \
+                      "/subfield[@code='z']"
         doc = ET.parse(sru_file)
         urn_statement = doc.xpath(urn_xpath,
                            namespaces=self.namespace_mapping)[0].text
-        return urn_statement == SUBFIELD_Z_BASE + self.object_urn
+        self.logger.debug("urn statement: " + urn_statement)
+        return urn_statement == SUBFIELD_Z_BASE + urn
 
 
     @tracer.start_as_current_span("send_to_alma")
@@ -581,7 +584,8 @@ class DRSHoldingByAPI():
                 current_span.set_status(Status(StatusCode.ERROR))
                 current_span.add_event("error uploading drs holding for pqid: " + self.pqid)
             return False
-        drsHoldingSent = self.confirm_new_drs_holding(self.pqid)
+        drsHoldingSent = self.confirm_new_drs_holding(self.pqid, mms_id,
+                                                      holding_id, self.object_urn)
         if not drsHoldingSent:
             self.logger.error("Error confirming drs holding update for pqid: " +
                               self.pqid)
