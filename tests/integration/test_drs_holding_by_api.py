@@ -59,7 +59,7 @@ class TestDRSHoldingByAPI():
         """
         Test case for confirm_new_drs_holding method of DRSHoldingByAPI class.
         """
-        pqid = "7453039999" #"0434559314"
+        pqid = "7453039999"
         mms_id = "99156848360203941"
         holding_id = "222608684560003941"
         object_urn = "URN-3:HUL.DRS.OBJECT:12345678"
