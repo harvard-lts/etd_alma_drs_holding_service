@@ -424,7 +424,7 @@ class DRSHoldingByAPI():
         self.logger.debug("submitting drs holding")
         self.logger.debug(ALMA_API_BASE + ALMA_GET_BIB_BASE +
                           mms_id + "/holdings/" + holding_id +
-                          "?apikey=" + ALMA_API_KEY)
+                          "?apikey=" + ALMA_API_KEY_2)
 
         headers = {'Content-Type': 'application/xml'}
         r = requests.put(ALMA_API_BASE + ALMA_GET_BIB_BASE +
