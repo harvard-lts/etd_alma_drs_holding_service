@@ -429,7 +429,7 @@ class DRSHoldingByAPI():
         headers = {'Content-Type': 'application/xml'}
         r = requests.put(ALMA_API_BASE + ALMA_GET_BIB_BASE +
                           mms_id + "/holdings/" + holding_id +
-                          "?apikey=" + ALMA_API_KEY,
+                          "?apikey=" + ALMA_API_KEY_2,
                           data=filename, headers=headers)
         if r.status_code == 200:
             self.logger.info("Successfully submitted new DRS holding for pqid: " +
