@@ -51,7 +51,7 @@ class TestDRSHoldingByAPI():
         pqid = "7453039999"
         object_urn = "URN-3:HUL.DRS.OBJECT:12345678"
         mms_id = "99156848360203941"
-        holding_id ="222608684560003941"
+        holding_id = "222608684560003941"
         holding_file = "./tests/data/test_upload_nodash_with_urn.xml"
         drs_holding = DRSHoldingByAPI(pqid, object_urn, integration_test=True)
         assert drs_holding.upload_new_drs_holding(pqid, mms_id,
