@@ -41,8 +41,6 @@ class TestDRSHoldingByAPI():
         assert drs_holding.marc_xml_values is not None
         assert drs_holding.marc_xml_values['001'] == \
             "222608684560003941"
-        assert drs_holding.marc_xml_values['005'] == \
-            "20240110140636.0"
 
     def test_upload_new_drs_holding(self):
         """

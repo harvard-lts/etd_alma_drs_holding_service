@@ -423,14 +423,14 @@ class DRSHoldingByAPI():
             current_span.add_event("submitting drs holding")
         self.logger.debug("submitting drs holding")
         self.logger.debug(ALMA_API_BASE + ALMA_GET_BIB_BASE +
-                          mms_id + "/holdings/" + holding_id +
-                          "?apikey=" + ALMA_API_KEY_2)
+                          mms_id + "/holdings/" + holding_id)
 
-        headers = {'Content-Type': 'application/xml'}
+        headers = {'Content-Type': 'application/xml',
+                   'X-API-Key': ALMA_API_KEY_2}
+        data = open(filename, 'rb').read()
         r = requests.put(ALMA_API_BASE + ALMA_GET_BIB_BASE +
-                          mms_id + "/holdings/" + holding_id +
-                          "?apikey=" + ALMA_API_KEY_2,
-                          data=filename, headers=headers)
+                          mms_id + "/holdings/" + holding_id,
+                          data=data, headers=headers)
         if r.status_code == 200:
             self.logger.info("Successfully submitted new DRS holding for pqid: " +
                               pqid + " status code: " + str(r.status_code))
