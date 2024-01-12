@@ -380,7 +380,7 @@ class DRSHoldingByAPI():
                         # Datafield 909, proquest id
                         elif parent.attrib['tag'] == '909':
                             if child.attrib['code'] == 'k':
-                                childText = child.text.replace('LIB_CODE_3_CHAR', marcXmlValues['library_code'].upper())
+                                childText = child.text.replace('LIB_CODE_3_CHAR', marcXmlValues['library_code'].lower())
                                 child.text = childText
         except Exception as e:  # pragma: no cover
             self.logger.error("Error transforming DRS holding for pqid: " +
