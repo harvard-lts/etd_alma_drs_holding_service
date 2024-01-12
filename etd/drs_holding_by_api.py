@@ -105,12 +105,12 @@ class DRSHoldingByAPI():
                 current_span = trace.get_current_span()
                 current_span.set_status(Status(StatusCode.ERROR))
                 current_span.add_event(f'can\'t create {self.output_dir}')
-            self.logger.critical(f'can\'t create {self.output_dir}')
+            self.logger.critical(f'can\'t create {self.output_dir}') # pragma: no cover
 
 
     
     @tracer.start_as_current_span("get_mms_id")
-    def get_mms_id(self, pqid):
+    def get_mms_id(self, pqid):  # pragma: no cover, this is covered in the int test # noqa
         """
         This method gets the mms id by proquest id.
 
