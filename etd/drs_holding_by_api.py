@@ -97,11 +97,11 @@ class DRSHoldingByAPI():
                                   'marc': 'http://www.loc.gov/MARC21/slim',
                                   'mods': 'http://www.loc.gov/mods/v3'}
         self.output_dir = f'{data_dir}/out/proquest{self.pqid}-holdings'
-        if alt_output_dir is not None:  # pragma: no cover
+        if alt_output_dir is not None:
             self.output_dir = alt_output_dir 
         os.makedirs(self.output_dir, exist_ok=True)
         if not os.path.exists(self.output_dir):
-            if (not self.unittesting):  # pragma: no cover
+            if (not self.unittesting):
                 current_span = trace.get_current_span()
                 current_span.set_status(Status(StatusCode.ERROR))
                 current_span.add_event(f'can\'t create {self.output_dir}')
@@ -118,7 +118,7 @@ class DRSHoldingByAPI():
         Returns: True if the mms id is retrieved, False otherwise.
         """
         current_span = trace.get_current_span()
-        if (not self.unittesting):  # pragma: no cover
+        if (not self.unittesting):
             current_span.add_event("getting mms id via proquest id")
             current_span.set_attribute("identifier", pqid)
         self.logger.debug("getting mms id via proquest id")
@@ -155,7 +155,7 @@ class DRSHoldingByAPI():
 
     
     @tracer.start_as_current_span("get_drs_holding_id_by_mms_id")
-    def get_drs_holding_id_by_mms_id(self, mms_id):
+    def get_drs_holding_id_by_mms_id(self, mms_id):  # pragma: no cover, this is covered in the int test # noqa
         """"
         This method gets the drs holdings id by mms id, 
         assuming the library code is a 3-letter code and location code = "NET".
@@ -167,7 +167,7 @@ class DRSHoldingByAPI():
         Returns: True if the drs holdings id is retrieved, False otherwise.
         """
 
-        current_span = trace.get_current_span()  # pragma: no cover
+        current_span = trace.get_current_span()
         if (not self.unittesting):  
             current_span.add_event("getting drs holdings by mms id")
             current_span.set_attribute("mms_id", mms_id)
@@ -220,7 +220,7 @@ class DRSHoldingByAPI():
 
     
     @tracer.start_as_current_span("get_drs_holding")
-    def get_drs_holding(self, mms_id, holding_id):
+    def get_drs_holding(self, mms_id, holding_id):  # pragma: no cover, this is covered in the int test # noqa
         """
         This method gets the drs holding, given a mms id and holding id.
         Args: mms id, holding id
@@ -382,7 +382,7 @@ class DRSHoldingByAPI():
                             if child.attrib['code'] == 'k':
                                 childText = child.text.replace('LIB_CODE_3_CHAR', marcXmlValues['library_code'].upper())
                                 child.text = childText
-        except Exception as e:  # pragma: no cover
+        except Exception as e:
             self.logger.error("Error transforming DRS holding for pqid: " +
                               self.pqid, exc_info=True)
             if (not self.unittesting):
@@ -390,7 +390,7 @@ class DRSHoldingByAPI():
                 current_span.add_event("error transforming drs holding for pqid: " + self.pqid)
             return False
 
-        try:  # pragma: no cover
+        try:
             # Write xml record out in batch directory
             with open(updated_holding, 'w') as UpdatedRecordOut:
                 UpdatedRecordOut.write('<?xml version="1.0" encoding="UTF-8"?>\n')
@@ -398,7 +398,7 @@ class DRSHoldingByAPI():
                 UpdatedRecordOut.write(updated_holding_xml)
         except Exception as e:  
             self.logger.error("Error writing DRS holding for pqid: " + self.pqid, exc_info=True)
-            if (not self.unittesting):  # pragma: no cover
+            if (not self.unittesting):
                 current_span.set_status(Status(StatusCode.ERROR))
                 current_span.add_event("error writing drs holding for pqid: " + self.pqid)
                 return False
@@ -410,7 +410,7 @@ class DRSHoldingByAPI():
     
 
     @tracer.start_as_current_span("upload_new_drs_holding")
-    def upload_new_drs_holding(self, pqid, mms_id, holding_id, filename):  # pragma: no cover
+    def upload_new_drs_holding(self, pqid, mms_id, holding_id, filename):  # pragma: no cover, this is covered in the int test # noqa
         """
         This method uploads the new drs holding to alma.
 
@@ -443,7 +443,7 @@ class DRSHoldingByAPI():
 
     
     @tracer.start_as_current_span("confirm_new_drs_holding")
-    def confirm_new_drs_holding(self, pqid, mms_id, holding_id, urn):
+    def confirm_new_drs_holding(self, pqid, mms_id, holding_id, urn):  # pragma: no cover, this is covered in the int test # noqa
         """
         This method confirms the new drs holding is in alma with an urn attached.
 
@@ -451,8 +451,8 @@ class DRSHoldingByAPI():
         Returns: True if the new drs holding is in alma with an urn attached,
             False otherwise.
         """
-        current_span = trace.get_current_span()  # pragma: no cover
-        if (not self.unittesting):  # pragma: no cover
+        current_span = trace.get_current_span()
+        if (not self.unittesting):
             current_span.add_event("confirming drs holding")
             current_span.set_attribute("identifier", pqid)
         self.logger.debug("confirming new drs holding")
@@ -460,7 +460,7 @@ class DRSHoldingByAPI():
                          ALMA_GET_HOLDINGS_PATH + "/" + holding_id +
                          "?apikey=" + ALMA_API_KEY_2)
         sru_file = f'{self.output_dir}/src_marc.xml'
-        if r.status_code == 200:  # pragma: no cover
+        if r.status_code == 200:  
             with open(sru_file, 'wb') as f:
                 f.write(r.content)
         else:
