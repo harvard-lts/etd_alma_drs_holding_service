@@ -18,14 +18,14 @@ class TestDRSHoldingByAPI():
         Test case for get_drs_holdings_by_mms_id method of
         DRSHoldingByAPI class.
         """
-        pqid = "28542882"
+        pqid = "7453039999"
         object_urn = "URN-3:HUL.DRS.OBJECT:12345678"
         drs_holding = DRSHoldingByAPI(pqid, object_urn, True)
-        mms_id = "99156845176203941"
+        mms_id = "99156848360203941"
         holding_id = drs_holding.get_drs_holding_id_by_mms_id(mms_id)
         assert drs_holding.marc_xml_values is not None
         assert drs_holding.marc_xml_values['holding_id'] == holding_id
-        assert holding_id == "222607866070003941"
+        assert holding_id == "222608684560003941"
 
     def test_get_drs_holding(self):
         """
