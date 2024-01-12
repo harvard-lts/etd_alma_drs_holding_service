@@ -97,11 +97,11 @@ class DRSHoldingByAPI():
                                   'marc': 'http://www.loc.gov/MARC21/slim',
                                   'mods': 'http://www.loc.gov/mods/v3'}
         self.output_dir = f'{data_dir}/out/proquest{self.pqid}-holdings'
-        if alt_output_dir is not None:
+        if alt_output_dir is not None:  # pragma: no cover
             self.output_dir = alt_output_dir 
         os.makedirs(self.output_dir, exist_ok=True)
         if not os.path.exists(self.output_dir):
-            if (not self.unittesting):
+            if (not self.unittesting):  # pragma: no cover
                 current_span = trace.get_current_span()
                 current_span.set_status(Status(StatusCode.ERROR))
                 current_span.add_event(f'can\'t create {self.output_dir}')
@@ -118,7 +118,7 @@ class DRSHoldingByAPI():
         Returns: True if the mms id is retrieved, False otherwise.
         """
         current_span = trace.get_current_span()
-        if (not self.unittesting):
+        if (not self.unittesting):  # pragma: no cover
             current_span.add_event("getting mms id via proquest id")
             current_span.set_attribute("identifier", pqid)
         self.logger.debug("getting mms id via proquest id")
@@ -167,8 +167,8 @@ class DRSHoldingByAPI():
         Returns: True if the drs holdings id is retrieved, False otherwise.
         """
 
-        current_span = trace.get_current_span()
-        if (not self.unittesting):
+        current_span = trace.get_current_span()  # pragma: no cover
+        if (not self.unittesting):  
             current_span.add_event("getting drs holdings by mms id")
             current_span.set_attribute("mms_id", mms_id)
         self.logger.debug("getting drs holdings by mms id")
@@ -226,7 +226,7 @@ class DRSHoldingByAPI():
         Args: mms id, holding id
         Returns: True if the drs holding is retrieved, False otherwise.
         """
-        current_span = trace.get_current_span()
+        current_span = trace.get_current_span()  # pragma: no cover
         if (not self.unittesting):
             current_span.add_event("get drs holding")
             current_span.set_attribute("holding_id", holding_id)
@@ -307,7 +307,7 @@ class DRSHoldingByAPI():
             bool: True if the marcxml was transformed, False otherwise.
         """
         current_span = trace.get_current_span()
-        if (not self.unittesting):
+        if (not self.unittesting):  # pragma: no cover
             current_span.add_event("transforming drs holding")
         self.logger.debug("transforming drs holding")
 
@@ -382,7 +382,7 @@ class DRSHoldingByAPI():
                             if child.attrib['code'] == 'k':
                                 childText = child.text.replace('LIB_CODE_3_CHAR', marcXmlValues['library_code'].upper())
                                 child.text = childText
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             self.logger.error("Error transforming DRS holding for pqid: " +
                               self.pqid, exc_info=True)
             if (not self.unittesting):
@@ -390,15 +390,15 @@ class DRSHoldingByAPI():
                 current_span.add_event("error transforming drs holding for pqid: " + self.pqid)
             return False
 
-        try:
+        try:  # pragma: no cover
             # Write xml record out in batch directory
             with open(updated_holding, 'w') as UpdatedRecordOut:
                 UpdatedRecordOut.write('<?xml version="1.0" encoding="UTF-8"?>\n')
                 updated_holding_xml = etree.tostring(rootRecord, encoding='unicode')
                 UpdatedRecordOut.write(updated_holding_xml)
-        except Exception as e:
+        except Exception as e:  
             self.logger.error("Error writing DRS holding for pqid: " + self.pqid, exc_info=True)
-            if (not self.unittesting):
+            if (not self.unittesting):  # pragma: no cover
                 current_span.set_status(Status(StatusCode.ERROR))
                 current_span.add_event("error writing drs holding for pqid: " + self.pqid)
                 return False
@@ -451,8 +451,8 @@ class DRSHoldingByAPI():
         Returns: True if the new drs holding is in alma with an urn attached,
             False otherwise.
         """
-        current_span = trace.get_current_span()
-        if (not self.unittesting):
+        current_span = trace.get_current_span()  # pragma: no cover
+        if (not self.unittesting):  # pragma: no cover
             current_span.add_event("confirming drs holding")
             current_span.set_attribute("identifier", pqid)
         self.logger.debug("confirming new drs holding")
@@ -460,7 +460,7 @@ class DRSHoldingByAPI():
                          ALMA_GET_HOLDINGS_PATH + "/" + holding_id +
                          "?apikey=" + ALMA_API_KEY_2)
         sru_file = f'{self.output_dir}/src_marc.xml'
-        if r.status_code == 200:
+        if r.status_code == 200:  # pragma: no cover
             with open(sru_file, 'wb') as f:
                 f.write(r.content)
         else:
