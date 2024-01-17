@@ -360,7 +360,6 @@ class DRSHoldingByDropbox():
             self.logger.error(f"Unable to find record for {self.pqid}")
             current_span.set_status(Status(StatusCode.ERROR))
             current_span.add_event("Unable to find record in mongo")
-            current_span.record_exception(e)
             raise Exception(f"Unable to find record for {self.pqid}")
         return record_list[0]
     

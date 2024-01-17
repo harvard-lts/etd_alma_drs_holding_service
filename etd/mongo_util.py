@@ -40,8 +40,8 @@ class MongoUtil():   # pragma: no cover, not used by unit tests
         else:  # pragma: no cover, not currently used by app
             return list(self.collection.find(query))
 
-    def delete_records(self):
-        self.collection.delete_many({})
+    def delete_records(self, query={}):
+        self.collection.delete_many(query)
 
     def close_connection(self):
         self.client.close()

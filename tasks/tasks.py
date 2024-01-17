@@ -22,6 +22,7 @@ from etd.drs_holding_by_dropbox import DRSHoldingByDropbox
 from etd.drs_holding_by_api import DRSHoldingByAPI
 from etd.mongo_util import MongoUtil
 import etd.mongo_util as mongo_util
+import traceback
 
 app = Celery()
 app.config_from_object('celeryconfig')
@@ -146,6 +147,11 @@ def create_drs_holding_record_in_alma(json_message):  # pragma: no cover, not se
     pqid = json_message['pqid']
     object_urn = json_message['object_urn']
     mongoutil = MongoUtil()
+    logger.debug("JSON Message: {}".format(json_message))
+    if "integration_test" in json_message:  # pragma: no cover, only changes collection # noqa
+        logger.debug("Setting Mongo Collection to {}".
+                     format(os.getenv("MONGO_TEST_COLLECTION")))
+        mongoutil.set_collection(mongoutil.db[os.getenv("MONGO_TEST_COLLECTION")])  # noqa
     query = {mongo_util.FIELD_SUBMISSION_STATUS:
              mongo_util.ALMA_STATUS,
              mongo_util.FIELD_PQ_ID: pqid}
@@ -154,6 +160,8 @@ def create_drs_holding_record_in_alma(json_message):  # pragma: no cover, not se
     try:
         matching_records = mongoutil.query_records(query, fields)
         record_list = list(matching_records)
+        logger.debug("RECORD LIST:")
+        logger.debug(record_list)
         if len(record_list) > 1:
             logger.warn(f"Found {len(record_list)} for {pqid}")
         if (len(record_list) == 0):
@@ -169,7 +177,10 @@ def create_drs_holding_record_in_alma(json_message):  # pragma: no cover, not se
             logger.info(f"{pqid} is in DASH. Creating DRS Holding \
                                     record in Alma by dropbox")
             # Create the DRS holding record in Alma
-            drs_holding = DRSHoldingByDropbox(pqid, object_urn)
+            test_coll = None
+            if "integration_test" in json_message:  # pragma: no cover, only changes collection # noqa
+                test_coll = os.getenv("MONGO_TEST_COLLECTION")
+            drs_holding = DRSHoldingByDropbox(pqid, object_urn, test_coll)
             sent = drs_holding.send_to_alma(json_message)
             if not sent:
                 current_span.set_status(Status(StatusCode.ERROR))
@@ -193,6 +204,8 @@ def create_drs_holding_record_in_alma(json_message):  # pragma: no cover, not se
                                         in Alma by API")
     except Exception as e:
         logger.error(f"Error querying records: {e}")
+        exception_msg = traceback.format_exc()
+        logger.error(exception_msg)
         current_span.set_status(Status(StatusCode.ERROR))
         current_span.add_event(f"Unable to query mongo for DRS  \
                                holdings for pqid {pqid}")
