@@ -1,5 +1,6 @@
 from etd.drs_holding_by_dropbox import DRSHoldingByDropbox
 from etd.mongo_util import MongoUtil
+from celery import Celery
 import tasks.tasks as tasks
 import os
 import os.path
@@ -116,6 +117,25 @@ class TestDRSHoldingByDropbox():
                    "object_urn": object_urn,
                    "integration_test": True}
             tasks.create_drs_holding_record_in_alma(msg)
+        self.__teardown_multiple_test_collection()
+    
+    def test_multiple_task_messages(self):
+        """"
+        Test case for send_to_alma_worker method of DRSHoldingByDropbox class.
+        """
+        self.__setup_multiple_test_collection()
+
+        app1 = Celery('tasks')
+        app1.config_from_object('celeryconfig')
+        for record in self.multiple_records:
+            pqid = record["proquest_id"]
+            object_urn = "URN-3:HUL.DRS.OBJECT:"+pqid
+            msg = {"pqid": pqid,
+                   "object_urn": object_urn,
+                   "integration_test": True}
+            app1.send_task('etd-alma-drs-holding-service.tasks.add_holdings',
+                           args=[msg], kwargs={},
+                           queue=os.getenv("CONSUME_QUEUE_NAME"))
         assert False
         # self.__teardown_multiple_test_collection()
     

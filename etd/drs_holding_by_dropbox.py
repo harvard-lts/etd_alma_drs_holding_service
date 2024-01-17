@@ -88,10 +88,11 @@ This the worker class for the etd alma service.
 
 
 class DRSHoldingByDropbox():
-    logger = logging.getLogger('etd_alma_drs_holding')
-
+    
     def __init__(self, pqid, object_urn, test_collection=None, unittesting=False):
         configure_logger()
+        self.logger = logging.getLogger('etd_alma_drs_holding')
+
         self.pqid = pqid
         self.object_urn = object_urn
         self.unittesting = unittesting
