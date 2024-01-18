@@ -6,6 +6,7 @@ import os
 import os.path
 import datetime
 import shutil
+import time
 
 
 class TestDRSHoldingByDropbox():
@@ -136,6 +137,7 @@ class TestDRSHoldingByDropbox():
             app1.send_task('etd-alma-drs-holding-service.tasks.add_holdings',
                            args=[msg], kwargs={},
                            queue=os.getenv("CONSUME_QUEUE_NAME"))
+            time.sleep(3)
         assert False
         # self.__teardown_multiple_test_collection()
     
