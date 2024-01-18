@@ -86,7 +86,7 @@ class TestDRSHoldingByDropbox():
         assert holding_sent
 
         self.__teardown_single_test_collection()
-    
+
     def test_send_to_alma_worker_multiple(self):
         """"
         Test case for send_to_alma_worker method of DRSHoldingByDropbox class.
@@ -104,7 +104,7 @@ class TestDRSHoldingByDropbox():
             assert holding_sent
 
         self.__teardown_multiple_test_collection()
-    
+
     def test_task(self):
         """"
         Test case for send_to_alma_worker method of DRSHoldingByDropbox class.
@@ -119,7 +119,7 @@ class TestDRSHoldingByDropbox():
                    "integration_test": True}
             tasks.create_drs_holding_record_in_alma(msg)
         self.__teardown_multiple_test_collection()
-    
+
     def test_multiple_task_messages(self):
         """"
         Test case for send_to_alma_worker method of DRSHoldingByDropbox class.
@@ -138,9 +138,9 @@ class TestDRSHoldingByDropbox():
                            args=[msg], kwargs={},
                            queue=os.getenv("CONSUME_QUEUE_NAME"))
             time.sleep(3)
-        assert False
-        # self.__teardown_multiple_test_collection()
-    
+        time.sleep(15)
+        self.__teardown_multiple_test_collection()
+
     def __setup_single_test_collection(self):
         mongo_util = MongoUtil()
         mongo_util.set_collection(mongo_util.db[os.getenv(
@@ -156,7 +156,7 @@ class TestDRSHoldingByDropbox():
         os.makedirs(dest_in, exist_ok=True)
         os.makedirs(out_dir, exist_ok=True)
         shutil.copy(mets_source, dest_in)
-        
+
     def __teardown_single_test_collection(self):
         dest_in = os.path.join("/home/etdadm/local/data/in",
                                self.single_record[0]["directory_id"])
@@ -187,9 +187,9 @@ class TestDRSHoldingByDropbox():
             os.makedirs(dest_in, exist_ok=True)
             os.makedirs(out_dir, exist_ok=True)
             shutil.copy(mets_source, dest_in)
-        
+
     def __teardown_multiple_test_collection(self):
-        
+
         mongo_util = MongoUtil()
         mongo_util.set_collection(mongo_util.db[os.getenv(
             "MONGO_TEST_COLLECTION")])
@@ -202,4 +202,3 @@ class TestDRSHoldingByDropbox():
             shutil.rmtree(dest_in)
             shutil.rmtree(out_dir)
         mongo_util.close_connection()
-        
