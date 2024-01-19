@@ -45,6 +45,8 @@ def get_date_time_stamp(precision = 'minute'):  # pragma: no cover
 		dateTimeStamp = datetime.fromtimestamp(int(time())).strftime("%Y%m%d%H%M")
 	elif precision == 'second':
 		dateTimeStamp = datetime.fromtimestamp(int(time())).strftime("%Y%m%d%H%M%S")
+	elif precision == 'millisecond':
+		dateTimeStamp = datetime.fromtimestamp(int(time())).strftime("%Y%m%d%H%M%S%f")[:-3]
 	elif precision == 'hour':
 		dateTimeStamp = datetime.fromtimestamp(int(time())).strftime("%Y%m%d%H")
 	elif precision == 'day':

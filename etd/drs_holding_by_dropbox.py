@@ -88,10 +88,11 @@ This the worker class for the etd alma service.
 
 
 class DRSHoldingByDropbox():
-    logger = logging.getLogger('etd_alma_drs_holding')
-
+    
     def __init__(self, pqid, object_urn, test_collection=None, unittesting=False):
         configure_logger()
+        self.logger = logging.getLogger('etd_alma_drs_holding')
+
         self.pqid = pqid
         self.object_urn = object_urn
         self.unittesting = unittesting
@@ -164,11 +165,11 @@ class DRSHoldingByDropbox():
         mongo_record_for_pqid = self.___get_record_from_mongo()
 
         # Start xml record collection output file
-        yyyymmddhhmm    = get_date_time_stamp('minute')
-        xmlCollectionFileName = f'AlmaDRSDark{instance.capitalize()}_{yyyymmddhhmm}.xml'
+        yyyymmddhhmmssml    = get_date_time_stamp('millisecond')
+        xmlCollectionFileName = f'AlmaDRSDark{instance.capitalize()}_{yyyymmddhhmmssml}.xml'
         xmlCollectionFile = xmlCollectionFileName
         if integration_test:
-            xmlCollectionFile = f'AlmaDRSDarkTest{instance.capitalize()}_{yyyymmddhhmm}.xml'
+            xmlCollectionFile = f'AlmaDRSDarkTest{instance.capitalize()}_{yyyymmddhhmmssml}.xml'
             schoolMatch = re.match(r'proquest\d+-\d+-(\w+)', ALMA_TEST_BATCH_NAME)
             if schoolMatch:
                 school = schoolMatch.group(1)
@@ -360,7 +361,6 @@ class DRSHoldingByDropbox():
             self.logger.error(f"Unable to find record for {self.pqid}")
             current_span.set_status(Status(StatusCode.ERROR))
             current_span.add_event("Unable to find record in mongo")
-            current_span.record_exception(e)
             raise Exception(f"Unable to find record for {self.pqid}")
         return record_list[0]
     
