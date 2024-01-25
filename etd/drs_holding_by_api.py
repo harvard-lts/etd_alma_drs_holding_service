@@ -561,7 +561,7 @@ class DRSHoldingByAPI():
 
         # START PROCESSING
         # Get the mms id
-        mms_id = self.get_mms_id(self, self.pqid)
+        mms_id = self.get_mms_id(self.pqid)
         if not mms_id:
             self.logger.error("Error getting mms id for pqid: " +
                               self.pqid)
