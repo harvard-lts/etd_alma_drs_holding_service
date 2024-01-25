@@ -9,6 +9,8 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter)
 from opentelemetry.sdk.resources import SERVICE_NAME
+from etd.mongo_util import MongoUtil
+import etd.mongo_util as mongo_util
 
 import sys
 from lxml import etree
@@ -77,7 +79,10 @@ class DRSHoldingByAPI():
 
     
     @tracer.start_as_current_span("init_drs_holding_by_api")
-    def __init__(self, pqid, object_urn, unittesting=False, integration_test=False, alt_output_dir=None):
+    def __init__(self, pqid, object_urn, unittesting=False,
+                 integration_test=False,
+                 alt_output_dir=None,
+                 test_collection=None):
         """
          This method initializes the class and creates a working directory 
          for xml files.
@@ -107,7 +112,10 @@ class DRSHoldingByAPI():
                 current_span.add_event(f'can\'t create {self.output_dir}')
             self.logger.critical(f'can\'t create {self.output_dir}') # pragma: no cover
 
-
+        if not unittesting:
+            self.mongoutil = MongoUtil()  # pragma: no cover, unit testing doesn't use mongo # noqa
+            if test_collection is not None:  # pragma: no cover, only changes collection # noqa
+                self.mongoutil.set_collection(self.mongoutil.db[test_collection])
     
     @tracer.start_as_current_span("get_mms_id")
     def get_mms_id(self, pqid):  # pragma: no cover, this is covered in the int test # noqa
@@ -542,6 +550,15 @@ class DRSHoldingByAPI():
             current_span.add_event("sending drs holding to alma dropbox")
         self.logger.debug(f'{self.pqid} DRS holding was sent to Alma')
 
+        # Check to see if this was already processed by looking in Mongo
+        # Do not re-run a processed batch unless forced #- test
+        if (not integration_test):
+            if ((not force) and self.__record_already_processed()):
+                notifyJM.log('fail', f'Holding record {self.pqid} has already been created. Use force flag to re-run.', True)
+                current_span.set_status(Status(StatusCode.ERROR))
+                current_span.add_event(f'Holding record {self.pqid} has already been created. Use force flag to re-run.')
+                return False
+
         # START PROCESSING
         # Get the mms id
         mms_id = self.get_mms_id(self, self.pqid)
@@ -599,9 +616,88 @@ class DRSHoldingByAPI():
 
         if (not self.unittesting):
             current_span.add_event(f'{self.pqid} DRS holding was updated & sent to Alma')
+            mongo_record_for_pqid = self.___get_record_from_mongo()
+            batch = mongo_record_for_pqid[mongo_util.FIELD_DIRECTORY_ID].strip()
+            try:
+                query = {mongo_util.FIELD_PQ_ID: self.pqid,
+                         mongo_util.FIELD_DIRECTORY_ID: batch}
+                self.mongoutil.update_status(
+                    query, mongo_util.DRS_HOLDING_API_STATUS)
+                current_span.add_event(f'Status for Proquest id {self.pqid} in {batch} updated in mongo')
+            except Exception as e:
+                self.logger.error(f"Error updating status for {self.pqid}: {e}")
+                current_span.set_status(Status(StatusCode.ERROR))
+                current_span.add_event(f'Could not update proquest id {self.pqid} in {batch} updated in mongo')
+                current_span.record_exception(e)
+                self.mongoutil.close_connection()
+                return False
         self.logger.debug(f'{self.pqid} DRS holding was updated & sent to Alma')
         notifyJM.log('pass', f'{self.pqid} DRS holding was updated & sent to Alma', verbose)
         notifyJM.report('complete')
         if (not self.unittesting):
             current_span.add_event("completed")
         return drsHoldingSent
+
+    @tracer.start_as_current_span("send_holding_to_alma_worker")
+    def __record_already_processed(self): # pragma: no cover, not using for unit tests
+        current_span = trace.get_current_span()
+        current_span.add_event("verifying if DRS holding exists")
+        query = {mongo_util.FIELD_SUBMISSION_STATUS:
+                 mongo_util.DRS_HOLDING_API_STATUS,
+				 mongo_util.FIELD_PQ_ID: self.pqid}
+        fields = {mongo_util.FIELD_PQ_ID: 1,
+                  mongo_util.FIELD_SCHOOL_ALMA_DROPBOX: 1,
+                  mongo_util.FIELD_SUBMISSION_STATUS: 1,
+                  mongo_util.FIELD_DIRECTORY_ID: 1}
+        self.logger.info("Starting poll for alma DRS holding")
+        matching_records = []
+
+        try:
+            matching_records = self.mongoutil.query_records(query, fields)
+            self.logger.info(f"Found {len(matching_records)} \
+                             matching records")
+            self.logger.debug(f"Matching records: {matching_records}")
+        except Exception as e:
+            self.logger.error(f"Error querying records: {e}")
+            current_span.set_status(Status(StatusCode.ERROR))
+            current_span.add_event("Unable to query mongo for DRS holdings")
+            current_span.record_exception(e)
+            raise e
+        record_list = list(matching_records)
+        return len(record_list) > 0
+
+    @tracer.start_as_current_span("send_holding_to_alma_worker")
+    def ___get_record_from_mongo(self): # pragma: no cover, not using for unit tests
+        current_span = trace.get_current_span()
+        current_span.add_event("getting data from mongo exists")
+        query = {mongo_util.FIELD_SUBMISSION_STATUS:
+                 mongo_util.ALMA_STATUS,
+				 mongo_util.FIELD_PQ_ID: self.pqid}
+        fields = {mongo_util.FIELD_PQ_ID: 1,
+                  mongo_util.FIELD_SCHOOL_ALMA_DROPBOX: 1,
+                  mongo_util.FIELD_SUBMISSION_STATUS: 1,
+                  mongo_util.FIELD_DIRECTORY_ID: 1}
+        self.logger.info("getting data from mongo exists")
+        matching_records = []
+
+        try:
+            matching_records = self.mongoutil.query_records(query, fields)
+            self.logger.info(f"Found {len(matching_records)} \
+                             matching records")
+            self.logger.debug(f"Matching records: {matching_records}")
+        except Exception as e:
+            self.logger.error(f"Error querying records: {e}")
+            current_span.set_status(Status(StatusCode.ERROR))
+            current_span.add_event("Unable to query mongo for DRS holdings")
+            current_span.record_exception(e)
+            raise e
+        record_list = list(matching_records)
+        if len(record_list) > 1:
+            self.logger.warn(f"Found {len(record_list)} for {self.pqid}")
+        if (len(record_list) == 0):
+            self.logger.error(f"Unable to find record for {self.pqid}")
+            current_span.set_status(Status(StatusCode.ERROR))
+            current_span.add_event("Unable to find record in mongo")
+            current_span.record_exception(e)
+            raise Exception(f"Unable to find record for {self.pqid}")
+        return record_list[0]

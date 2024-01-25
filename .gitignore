@@ -176,3 +176,5 @@ local/data/in/*
 local/data/out/*
 !local/data/out/.keep
 AlmaDRSDark*
+
+.DS_Store
