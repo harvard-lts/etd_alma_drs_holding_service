@@ -154,10 +154,14 @@ class DRSHoldingByAPI():
         self.mmsid = mms_id
         xpath_245_ind2 = doc.xpath(xpath_245_ind2_xpath,
                                    namespaces=self.namespace_mapping)
+        self.logger.debug("xpath_245_ind2")
+        self.logger.debug(xpath_245_ind2)
         self.marc_xml_values['titleIndicator2'] = xpath_245_ind2
         xpath_245_subfield_a = doc.xpath(xpath_245_subfield_a_xpath,
                                          namespaces=self.namespace_mapping)[0]
-        self.marc_xml_values['title'] = xpath_245_subfield_a
+        self.logger.debug("xpath_245_subfield_a")
+        self.logger.debug(xpath_245_subfield_a)
+        self.marc_xml_values['title'] = xpath_245_subfield_a.text
 
         return mms_id
 
