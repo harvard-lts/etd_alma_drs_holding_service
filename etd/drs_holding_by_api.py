@@ -156,7 +156,8 @@ class DRSHoldingByAPI():
                                    namespaces=self.namespace_mapping)
         self.logger.debug("xpath_245_ind2")
         self.logger.debug(xpath_245_ind2)
-        self.marc_xml_values['titleIndicator2'] = xpath_245_ind2
+        if (xpath_245_ind2 is not None and len(xpath_245_ind2) > 0):
+            self.marc_xml_values['titleIndicator2'] = xpath_245_ind2.text
         xpath_245_subfield_a = doc.xpath(xpath_245_subfield_a_xpath,
                                          namespaces=self.namespace_mapping)[0]
         self.logger.debug("xpath_245_subfield_a")
