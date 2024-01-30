@@ -48,7 +48,6 @@ tracer = trace.get_tracer(__name__)
 
 # Alma API keys
 ALMA_API_KEY = os.getenv('ALMA_API_KEY')
-ALMA_API_KEY_2 = os.getenv('ALMA_API_KEY_2')
 ALMA_API_BASE = os.getenv('ALMA_API_BASE')
 ALMA_SRU_BASE = os.getenv('ALMA_SRU_BASE')
 ALMA_SRU_MARCXML_BASE = os.getenv('ALMA_SRU_MARCXML_BASE')
@@ -187,10 +186,10 @@ class DRSHoldingByAPI():
             current_span.set_attribute("mms_id", mms_id)
         self.logger.debug("getting drs holdings by mms id")
         self.logger.debug(ALMA_API_BASE + ALMA_GET_BIB_BASE + mms_id
-                         + ALMA_GET_HOLDINGS_PATH + "?apikey=" + ALMA_API_KEY_2)
+                         + ALMA_GET_HOLDINGS_PATH + "?apikey=" + ALMA_API_KEY)
 
         r = requests.get(ALMA_API_BASE + ALMA_GET_BIB_BASE + mms_id
-                         + ALMA_GET_HOLDINGS_PATH + "?apikey=" + ALMA_API_KEY_2)
+                         + ALMA_GET_HOLDINGS_PATH + "?apikey=" + ALMA_API_KEY)
         holdings_file = f'{self.output_dir}/holdings.xml'
         if r.status_code == 200:
             with open(holdings_file, 'wb') as f:
@@ -249,11 +248,11 @@ class DRSHoldingByAPI():
         self.logger.debug("get drs holding")
         self.logger.debug(ALMA_API_BASE + ALMA_GET_BIB_BASE + mms_id +
                          ALMA_GET_HOLDINGS_PATH + "/" + holding_id +
-                         "?apikey=" + ALMA_API_KEY_2)
+                         "?apikey=" + ALMA_API_KEY)
 
         r = requests.get(ALMA_API_BASE + ALMA_GET_BIB_BASE + mms_id +
                          ALMA_GET_HOLDINGS_PATH + "/" + holding_id +
-                         "?apikey=" + ALMA_API_KEY_2)
+                         "?apikey=" + ALMA_API_KEY)
         holding_file = f'{self.output_dir}/holding.xml'
         if r.status_code == 200:
             with open(holding_file, 'wb') as f:
@@ -440,7 +439,7 @@ class DRSHoldingByAPI():
                           mms_id + "/holdings/" + holding_id)
 
         headers = {'Content-Type': 'application/xml',
-                   'X-API-Key': ALMA_API_KEY_2}
+                   'X-API-Key': ALMA_API_KEY}
         data = open(filename, 'rb').read()
         r = requests.put(ALMA_API_BASE + ALMA_GET_BIB_BASE +
                           mms_id + "/holdings/" + holding_id,
@@ -472,7 +471,7 @@ class DRSHoldingByAPI():
         self.logger.debug("confirming new drs holding")
         r = requests.get(ALMA_API_BASE + ALMA_GET_BIB_BASE + mms_id +
                          ALMA_GET_HOLDINGS_PATH + "/" + holding_id +
-                         "?apikey=" + ALMA_API_KEY_2)
+                         "?apikey=" + ALMA_API_KEY)
         sru_file = f'{self.output_dir}/src_marc.xml'
         if r.status_code == 200:  
             with open(sru_file, 'wb') as f:
