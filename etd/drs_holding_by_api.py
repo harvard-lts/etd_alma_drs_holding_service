@@ -134,7 +134,8 @@ class DRSHoldingByAPI():
             with open(sru_file, 'wb') as f:
                 f.write(r.content)
         else:
-            self.logger.error(f"Error getting DRS holding for pqid: {pqid}")
+            self.logger.error(f"Http error " + str(r.status_code) +
+                              " getting DRS holding for pqid: {pqid}")
             return False
 
         mmsid_xpath = "//srw:searchRetrieveResponse/srw:records/srw:record/" \
@@ -176,8 +177,9 @@ class DRSHoldingByAPI():
             with open(holdings_file, 'wb') as f:
                 f.write(r.content)
         else:
-            self.logger.error("Error getting DRS holdings list "
-                              "for pqid: " + "self.pqid")
+            self.logger.error("Http error " + str(r.status_code) +
+                              " getting DRS holdings list " +
+                              " for pqid: " + "self.pqid")
             return False
 
         # in case there are multiple holdings, loop through the holdings.xml file
@@ -195,7 +197,8 @@ class DRSHoldingByAPI():
                 self.holding_id = holding_id
                 break
         if self.holding_id is None:
-            self.logger.error("Error getting DRS holdings id for pqid: " +
+            self.logger.error("Xpath error (holding id not found) " +
+                              " getting DRS holdings id for pqid: " +
                               self.pqid)
             return False
         return self.holding_id
@@ -228,7 +231,8 @@ class DRSHoldingByAPI():
             with open(holding_file, 'wb') as f:
                 f.write(r.content)
         else:
-            self.logger.error("Error getting DRS holding file for pqid: " +
+            self.logger.error("Http error " + str(r.status_code) + 
+                              " getting DRS holding file for pqid: " +
                               self.pqid)
             return False
         # return the xml holding
@@ -275,7 +279,8 @@ class DRSHoldingByAPI():
                               self.pqid, exc_info=True)
             if (not self.unittesting):
                 current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("error transforming drs holding for pqid: " + self.pqid)
+                current_span.add_event("error transforming drs holding for pqid: " +
+                                       self.pqid)
             return False
 
         try:
@@ -352,7 +357,8 @@ class DRSHoldingByAPI():
             with open(sru_file, 'wb') as f:
                 f.write(r.content)
         else:
-            self.logger.error("Error getting updated DRS holding for pqid: " +
+            self.logger.error("Http error " + str(r.status_code) +
+                              " getting updated DRS holding for pqid: " +
                               pqid)
             return False
 
@@ -362,7 +368,9 @@ class DRSHoldingByAPI():
         urn_statement = doc.xpath(urn_xpath,
                            namespaces=self.namespace_mapping)[0].text
         self.logger.debug("urn statement: " + urn_statement)
-        return urn_statement == SUBFIELD_Z_BASE + urn
+        expected_statement = f'{SUBFIELD_Z_BASE}{urn}'
+        self.logger.debug("exp statement: " + expected_statement)
+        return urn_statement == expected_statement
 
 
     @tracer.start_as_current_span("send_to_alma")

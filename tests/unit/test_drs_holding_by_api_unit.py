@@ -1,6 +1,7 @@
 from etd.drs_holding_by_api import DRSHoldingByAPI
 import lxml.etree as ET
 
+
 class TestDRSHoldingByAPI():
 
     def test_transform_drs_holding(self):
@@ -16,9 +17,9 @@ class TestDRSHoldingByAPI():
 
         assert drs_holding.transform_drs_holding(output_dir, object_urn)
         urn_xpath = "//record/datafield[@tag='852']" \
-                      "/subfield[@code='z']"
+                    "/subfield[@code='z']"
         doc = ET.parse(updated_holding)
         urn_statement = doc.xpath(urn_xpath,
-                           namespaces=self.namespace_mapping)[0].text
-        self.logger.debug("urn statement: " + urn_statement)
+                                  namespaces=drs_holding.namespace_mapping)
+        [0].text
         assert urn_statement == expected_statement
