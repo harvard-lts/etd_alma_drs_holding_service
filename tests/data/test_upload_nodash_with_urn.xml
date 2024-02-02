@@ -1,19 +1,19 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <holding>
-<holding_id>222608684560003941</holding_id>
+<holding_id>222608684780003941</holding_id>
 <created_by>System</created_by>
-<created_date>2024-01-10Z</created_date>
+<created_date>2024-01-08Z</created_date>
 <last_modified_by>System</last_modified_by>
-<last_modified_date>2024-01-10Z</last_modified_date>
+<last_modified_date>2024-01-08Z</last_modified_date>
 <suppress_from_publishing>false</suppress_from_publishing>
 <calculated_suppress_from_publishing>false</calculated_suppress_from_publishing>
 <record>
-<leader>00537nx a22001571n 4500</leader>
-<controlfield tag="001">222608684560003941</controlfield>
-<controlfield tag="008">2401102u 8 4001uu 0000000</controlfield>
-<controlfield tag="005">20240110140636.0</controlfield>
+<leader>00367nx a22001331n 4500</leader>
+<controlfield tag="001">222608684780003941</controlfield>
+<controlfield tag="008">2401082u 8 4001uu 0000000</controlfield>
+<controlfield tag="005">20240108143540.0</controlfield>
 <datafield ind1=" " ind2=" " tag="035">
-<subfield code="a">(ProQuestETD)7453039999</subfield>
+<subfield code="a">(ProQuestETD)4878214564</subfield>
 </datafield>
 <datafield ind1=" " ind2=" " tag="337">
 <subfield code="a">computer</subfield>
@@ -23,26 +23,16 @@
 <subfield code="a">online resource</subfield>
 <subfield code="2">rdacarrier</subfield>
 </datafield>
-<datafield ind1="0" ind2=" " tag="506">
-<subfield code="a">Contact the Harvard University Archives about on-site viewing or obtaining a copy.</subfield>
+<datafield ind1="8" ind2=" " tag="852">
+<subfield code="b">NET</subfield>
+<subfield code="c">ETD</subfield>
+<subfield code="z">Preservation master, URN-3:HUL.DRS.OBJECT:12345678</subfield> 
 </datafield>
-<datafield ind1="1" ind2=" " tag="583">
-<subfield code="j">Harvard University Library</subfield>
-<subfield code="l">committed to preserve</subfield>
-<subfield code="5">MH</subfield>
-</datafield>
-<datafield ind1="0" ind2=" " tag="852">
-<subfield code="b">DES</subfield>
-<subfield code="c">NET</subfield>
-<subfield code="z">Preservation object, URN-3:HUL.DRS.OBJECT:12345678</subfield>
+<datafield ind1="4" ind2="0" tag="856">
+<subfield code="u">https://nrs.harvard.edu/urn-3:HUL.InstRepos:37158222</subfield>
 </datafield>
 <datafield ind1=" " ind2=" " tag="909">
 <subfield code="k">netDES</subfield>
-</datafield>
-<datafield ind1="1" ind2=" " tag="993">
-<subfield code="j">Harvard University Library</subfield>
-<subfield code="l">committed to preserve</subfield>
-<subfield code="5">MH</subfield>
 </datafield>
 </record>
 </holding>
