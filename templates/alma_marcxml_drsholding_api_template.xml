@@ -43,7 +43,7 @@
     <datafield tag="852" ind1="7" ind2=" ">
       <subfield code="b">LIB_CODE_3_CHAR</subfield>
       <subfield code="c">NET</subfield>
-      <subfield code="z">Preservation object, [DRS OBJECT URN]</subfield>
+      <subfield code="z">Preservation master, [DRS OBJECT URN]</subfield>
       <subfield code="2">ZHCL</subfield>    
     </datafield>   
      
