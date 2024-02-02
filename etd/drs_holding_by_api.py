@@ -54,10 +54,6 @@ ALMA_SRU_MARCXML_BASE = os.getenv('ALMA_SRU_MARCXML_BASE')
 ALMA_GET_BIB_BASE = "/almaws/v1/bibs/"
 ALMA_GET_HOLDINGS_PATH = "/holdings"
 SUBFIELD_Z_BASE = "Preservation master, "
-almaMarcxmlTemplate = os.getenv('ALMA_MARCXML_DRSHOLDING_API_TEMPLATE',
-                                "./templates/"
-                                "alma_marcxml_drsholding_api_template.xml")
-
 FEATURE_FLAGS = "feature_flags"
 ALMA_FEATURE_FORCE_UPDATE_FLAG = "alma_feature_force_update_flag"
 ALMA_FEATURE_VERBOSE_FLAG = "alma_feature_verbose_flag"
@@ -293,8 +289,8 @@ class DRSHoldingByAPI():
             self.logger.error("Error writing DRS holding for pqid: " + self.pqid, exc_info=True)
             if (not self.unittesting):  # pragma: no cover
                 current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("error writing drs holding for pqid: " + self.pqid)
-                return False
+                current_span.add_event("error writing drs holding for pqid: " + self.pqid)  # pragma: no cover
+                return False  # pragma: no cover
 
         self.logger.debug(f'Wrote {updated_holding}')
 
