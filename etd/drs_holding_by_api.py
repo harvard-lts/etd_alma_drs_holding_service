@@ -53,7 +53,7 @@ ALMA_SRU_BASE = os.getenv('ALMA_SRU_BASE')
 ALMA_SRU_MARCXML_BASE = os.getenv('ALMA_SRU_MARCXML_BASE')
 ALMA_GET_BIB_BASE = "/almaws/v1/bibs/"
 ALMA_GET_HOLDINGS_PATH = "/holdings"
-SUBFIELD_Z_BASE = "Preservation object, "
+SUBFIELD_Z_BASE = "Preservation master, "
 almaMarcxmlTemplate = os.getenv('ALMA_MARCXML_DRSHOLDING_API_TEMPLATE',
                                 "./templates/"
                                 "alma_marcxml_drsholding_api_template.xml")
@@ -93,9 +93,6 @@ class DRSHoldingByAPI():
         self.object_urn = object_urn
         self.unittesting = unittesting
         self.integration_test = integration_test
-        self.marc_xml_values = {}
-        self.marc_xml_values['pqid'] = pqid
-        self.marc_xml_values['object_urn'] = object_urn
         self.namespace_mapping = {'srw':
                                   'http://www.loc.gov/zing/srw/',
                                   'marc': 'http://www.loc.gov/MARC21/slim',
@@ -142,27 +139,11 @@ class DRSHoldingByAPI():
 
         mmsid_xpath = "//srw:searchRetrieveResponse/srw:records/srw:record/" \
                       "srw:recordIdentifier"
-        xpath_245_ind2_xpath = "string(//marc:record/marc:datafield[@tag='245']/@id2)"
-        xpath_245_subfield_a_xpath = "//marc:record/marc:datafield[@tag='245']" \
-            "/marc:subfield[@code='a']"
 
         doc = ET.parse(sru_file)
         mms_id = doc.xpath(mmsid_xpath,
                            namespaces=self.namespace_mapping)[0].text
-        self.marc_xml_values['mms_id'] = mms_id
         self.mmsid = mms_id
-        xpath_245_ind2 = doc.xpath(xpath_245_ind2_xpath,
-                                   namespaces=self.namespace_mapping)
-        self.logger.debug("xpath_245_ind2")
-        self.logger.debug(xpath_245_ind2)
-        self.marc_xml_values['titleIndicator2'] = ""
-        if (xpath_245_ind2 is not None and len(xpath_245_ind2) > 0):
-            self.marc_xml_values['titleIndicator2'] = xpath_245_ind2.text
-        xpath_245_subfield_a = doc.xpath(xpath_245_subfield_a_xpath,
-                                         namespaces=self.namespace_mapping)[0]
-        self.logger.debug("xpath_245_subfield_a")
-        self.logger.debug(xpath_245_subfield_a)
-        self.marc_xml_values['title'] = xpath_245_subfield_a.text
 
         return mms_id
 
@@ -211,22 +192,11 @@ class DRSHoldingByAPI():
             location_code = holding.xpath(loc_xpath)[0].text
             holding_id = holding.xpath(holding_id_xpath)[0].text
             if (len(library_code) == 3 and location_code == "NET"):
-                self.marc_xml_values['library_code'] = library_code
-                self.marc_xml_values['location_code'] = location_code
-                self.marc_xml_values['holding_id'] = holding_id
                 self.holding_id = holding_id
                 break
         if self.holding_id is None:
             self.logger.error("Error getting DRS holdings id for pqid: " +
                               self.pqid)
-            return False
-        if self.marc_xml_values['library_code'] is None:
-            self.logger.error("Error getting DRS holdings lib code " +
-                              "for pqid: " + self.pqid)
-            return False
-        if self.marc_xml_values['location_code'] is None:
-            self.logger.error("Error getting DRS holdings location code " +
-                              "for pqid: " + self.pqid)
             return False
         return self.holding_id
 
@@ -261,60 +231,18 @@ class DRSHoldingByAPI():
             self.logger.error("Error getting DRS holding file for pqid: " +
                               self.pqid)
             return False
-
-        doc = ET.parse(holding_file)
-        leader_xpath = "//record/leader"
-        xpath_001_xpath = "//record/controlfield[@tag='001']"
-        xpath_005_xpath = "//record/controlfield[@tag='005']"
-        xpath_008_xpath = "//record/controlfield[@tag='008']"
-        created_by_xpath = "//holding/created_by"
-        created_date_xpath = "//holding/created_date"
-        self.marc_xml_values['last_modified_by'] = "ETD"
-        dateTimeStamp = datetime.fromtimestamp(int(time())).strftime("%Y-%m-%dZ")
-        self.marc_xml_values['last_modified_date'] = dateTimeStamp
-        self.marc_xml_values['last_modified_by'] = "ETDDEV"
-
-        self.marc_xml_values['leader'] = doc.xpath(leader_xpath,
-                                namespaces=self.namespace_mapping)[0].text
-        self.marc_xml_values['001'] = doc.xpath(xpath_001_xpath,
-                                namespaces=self.namespace_mapping)[0].text
-        self.marc_xml_values['005'] = doc.xpath(xpath_005_xpath,
-                                namespaces=self.namespace_mapping)[0].text
-        self.marc_xml_values['008'] = doc.xpath(xpath_008_xpath,
-                                namespaces=self.namespace_mapping)[0].text
-        self.marc_xml_values['created_by'] = doc.xpath(created_by_xpath,
-                                namespaces=self.namespace_mapping)[0].text
-        self.marc_xml_values['created_date'] = doc.xpath(created_date_xpath,
-                                namespaces=self.namespace_mapping)[0].text
-
-        if self.marc_xml_values['leader'] is None:
-            self.logger.error("Error getting marc leader value " +
-                              "for pqid: " + self.pqid)
-            return False
-        if self.marc_xml_values['001'] is None:
-            self.logger.error("Error getting marc 001 value " +
-                              "for pqid: " + self.pqid)
-            return False
-        if self.marc_xml_values['005'] is None:
-            self.logger.error("Error getting marc 005 value " +
-                              "for pqid: " + self.pqid)
-            return False
-        if self.marc_xml_values['008'] is None:
-            self.logger.error("Error getting marc 008 value " +
-                              "for pqid: " + self.pqid)
-            return False
-
         # return the xml holding
         return r.content
 
  
     @tracer.start_as_current_span("transform_drs_holding")
-    def transform_drs_holding(self, batchOutDir, marcXmlValues, verbose=False):
+    def transform_drs_holding(self, batchOutDir, urn, verbose=False):
         """
         Transforms the marcxml for the DRS holding.
 
         Args:
-            marc_xml_values (dict): The marcxml values to be transformed.
+            batchOutDir (str): The batch output directory.
+            urn (str): The urn to added to the transformed holding record.
 
         Returns:
             bool: True if the marcxml was transformed, False otherwise.
@@ -325,75 +253,22 @@ class DRSHoldingByAPI():
         self.logger.debug("transforming drs holding")
 
         updated_holding = f'{batchOutDir}/updated_holding.xml'
-        # Load template file and swapped in variables
-        marcXmlTree = etree.parse(almaMarcxmlTemplate)
+        holding_file = f'{batchOutDir}/holding.xml'
+        # Load existing holding file and swap in urn
+        marcXmlTree = etree.parse(holding_file)
         rootRecord = marcXmlTree.getroot()
 
         try:
-            for child in rootRecord.iter('holding_id', 'created_by',
-                                         'created_date','last_modified_by',
-                                         'last_modified_date', 
-                                         'leader', 'controlfield', 'subfield'):
-                # header tags
-                if child.tag == 'holding_id':
-                    childText = child.text.replace('HOLDING_ID', marcXmlValues['holding_id'])
-                    child.text = childText
-                elif child.tag == 'created_by':
-                    childText = child.text.replace('CREATED_BY', marcXmlValues['created_by'])
-                    child.text = childText
-                elif child.tag == 'created_date':
-                    childText = child.text.replace('CREATED_DATE', marcXmlValues['created_date'])
-                    child.text = childText
-                elif child.tag == 'last_modified_by':
-                    childText = child.text.replace('LAST_MODIFIED_BY', marcXmlValues['last_modified_by'])
-                    child.text = childText
-                elif child.tag == 'last_modified_date':
-                    childText = child.text.replace('LAST_MODIFIED_DATE', marcXmlValues['last_modified_date'])
-                    child.text = childText
-
-                #leader tag
-                elif child.tag == 'leader':
-                    childText = child.text.replace('LEADER', marcXmlValues['leader'])
-                    child.text = childText
-
-                # 008 controlfield
-                elif child.tag == 'controlfield':
-                    if child.attrib['tag'] == '008':
-                        childText = child.text.replace('FIELD_008', marcXmlValues['008'])
-                        child.text = childText
+            for child in rootRecord.iter('subfield'):
 
                 # datafield/subfields
-                elif child.tag == 'subfield':
+                if child.tag == 'subfield':
                     parent = child.getparent()
                     if parent.tag == 'datafield':
-
-                        # Datafield 035, Proquest ID
-                        if parent.attrib['tag'] == '035':
-                            if child.attrib['code'] == 'a':
-                                childText = child.text.replace('PROQUEST_IDENTIFIER_VALUE', marcXmlValues['pqid'])
-                                child.text = childText
-
-                        # Datafield 245, title and title indicator 2
-                        elif parent.attrib['tag'] == '245':
-                            if child.attrib['code'] == 'a':
-                                childText = child.text.replace('TITLE_VALUE', marcXmlValues['title'])
-                                child.text = childText
-                                parentInd2 = parent.attrib['ind2'].replace('TITLE_INDICATOR_2_VALUE', marcXmlValues['titleIndicator2'])
-                                parent.attrib['ind2'] = parentInd2
-
                         # Datafield 852
-                        elif parent.attrib['tag'] == '852':
+                        if parent.attrib['tag'] == '852':
                             if child.attrib['code'] == 'z':
-                                childText = child.text.replace('[DRS OBJECT URN]', self.object_urn)
-                                child.text = childText
-                            elif child.attrib['code'] == 'b':
-                                childText = child.text.replace('LIB_CODE_3_CHAR', marcXmlValues['library_code'].upper())
-                                child.text = childText
-
-                        # Datafield 909, proquest id
-                        elif parent.attrib['tag'] == '909':
-                            if child.attrib['code'] == 'k':
-                                childText = child.text.replace('LIB_CODE_3_CHAR', marcXmlValues['library_code'].lower())
+                                childText = f'{SUBFIELD_Z_BASE}{urn}'
                                 child.text = childText
         except Exception as e:  # pragma: no cover
             self.logger.error("Error transforming DRS holding for pqid: " +
@@ -587,7 +462,7 @@ class DRSHoldingByAPI():
                 current_span.set_status(Status(StatusCode.ERROR))
                 current_span.add_event("error getting drs holding for pqid: " + self.pqid)
             return False
-        transformed = self.transform_drs_holding(self.output_dir, self.marc_xml_values)
+        transformed = self.transform_drs_holding(self.output_dir,  self.object_urn)
         if not transformed:
             notifyJM.log('fail', f'Error transforming drs holding record for pqid: {self.pqid}', verbose)
             self.logger.error("Error transforming drs holding record for pqid: " +
