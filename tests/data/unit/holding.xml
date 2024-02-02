@@ -1,0 +1,37 @@
+<holding>
+<holding_id>222608684780003941</holding_id>
+<created_by>System</created_by>
+<created_date>2024-01-08Z</created_date>
+<last_modified_by>System</last_modified_by>
+<last_modified_date>2024-01-08Z</last_modified_date>
+<suppress_from_publishing>false</suppress_from_publishing>
+<calculated_suppress_from_publishing>false</calculated_suppress_from_publishing>
+<record>
+<leader>00367nx a22001331n 4500</leader>
+<controlfield tag="001">222608684780003941</controlfield>
+<controlfield tag="008">2401082u 8 4001uu 0000000</controlfield>
+<controlfield tag="005">20240108143540.0</controlfield>
+<datafield ind1=" " ind2=" " tag="035">
+<subfield code="a">(ProQuestETD)4878214564</subfield>
+</datafield>
+<datafield ind1=" " ind2=" " tag="337">
+<subfield code="a">computer</subfield>
+<subfield code="2">rdamedia</subfield>
+</datafield>
+<datafield ind1=" " ind2=" " tag="338">
+<subfield code="a">online resource</subfield>
+<subfield code="2">rdacarrier</subfield>
+</datafield>
+<datafield ind1="8" ind2=" " tag="852">
+<subfield code="b">NET</subfield>
+<subfield code="c">ETD</subfield>
+<subfield code="z">Deposit in process</subfield> 
+</datafield>
+<datafield ind1="4" ind2="0" tag="856">
+<subfield code="u">https://nrs.harvard.edu/urn-3:HUL.InstRepos:37158222</subfield>
+</datafield>
+<datafield ind1=" " ind2=" " tag="909">
+<subfield code="k">netDES</subfield>
+</datafield>
+</record>
+</holding>
