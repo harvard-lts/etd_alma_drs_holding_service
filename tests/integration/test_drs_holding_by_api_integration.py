@@ -23,10 +23,10 @@ class TestDRSHoldingByAPI():
         pqid = "7453039999"
         object_urn = "URN-3:HUL.DRS.OBJECT:12345678"
         drs_holding = DRSHoldingByAPI(pqid, object_urn, True)
-        mms_id = "99156848360203941"
+        mms_id = "99156848432503941"
         time.sleep(10)
         holding_id = drs_holding.get_drs_holding_id_by_mms_id(mms_id)
-        assert str(holding_id) == "222608684560003941"
+        assert str(holding_id) == "222608709850003941"
 
     def test_get_drs_holding(self):
         """
