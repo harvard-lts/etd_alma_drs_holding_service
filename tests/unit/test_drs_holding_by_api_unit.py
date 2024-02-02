@@ -20,6 +20,6 @@ class TestDRSHoldingByAPI():
                     "/subfield[@code='z']"
         doc = ET.parse(updated_holding)
         urn_statement = doc.xpath(urn_xpath,
-                                  namespaces=drs_holding.namespace_mapping)
-        [0].text
+                                  namespaces=drs_holding.
+                                  namespace_mapping)[0].text
         assert urn_statement == expected_statement
