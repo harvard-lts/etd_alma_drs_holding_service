@@ -285,7 +285,7 @@ class DRSHoldingByAPI():
                 UpdatedRecordOut.write('<?xml version="1.0" encoding="UTF-8"?>\n')
                 updated_holding_xml = etree.tostring(rootRecord, encoding='unicode')
                 UpdatedRecordOut.write(updated_holding_xml)
-        except Exception as e:  
+        except Exception as e:  # pragma: no cover
             self.logger.error("Error writing DRS holding for pqid: " + self.pqid, exc_info=True)
             if (not self.unittesting):  # pragma: no cover
                 current_span.set_status(Status(StatusCode.ERROR))
@@ -508,7 +508,7 @@ class DRSHoldingByAPI():
                 self.mongoutil.update_status(
                     query, mongo_util.DRS_HOLDING_API_STATUS)
                 current_span.add_event(f'Status for Proquest id {self.pqid} in {batch} updated in mongo')
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 self.logger.error(f"Error updating status for {self.pqid}: {e}")
                 current_span.set_status(Status(StatusCode.ERROR))
                 current_span.add_event(f'Could not update proquest id {self.pqid} in {batch} updated in mongo')
@@ -541,7 +541,7 @@ class DRSHoldingByAPI():
             self.logger.info(f"Found {len(matching_records)} \
                              matching records")
             self.logger.debug(f"Matching records: {matching_records}")
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             self.logger.error(f"Error querying records: {e}")
             current_span.set_status(Status(StatusCode.ERROR))
             current_span.add_event("Unable to query mongo for DRS holdings")
@@ -569,7 +569,7 @@ class DRSHoldingByAPI():
             self.logger.info(f"Found {len(matching_records)} \
                              matching records")
             self.logger.debug(f"Matching records: {matching_records}")
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             self.logger.error(f"Error querying records: {e}")
             current_span.set_status(Status(StatusCode.ERROR))
             current_span.add_event("Unable to query mongo for DRS holdings")
