@@ -64,6 +64,7 @@ notifyJM = False
 jobCode = 'drsholding2alma'
 instance = os.getenv('INSTANCE', '')
 DELAY_SECS = os.getenv('DELAY_SECS', 60)
+MAX_RETRIES = os.getenv('MAX_RETRIES', 3)
 
 """
 This the worker class for the etd alma service.
