@@ -53,11 +53,7 @@ ALMA_SRU_BASE = os.getenv('ALMA_SRU_BASE')
 ALMA_SRU_MARCXML_BASE = os.getenv('ALMA_SRU_MARCXML_BASE')
 ALMA_GET_BIB_BASE = "/almaws/v1/bibs/"
 ALMA_GET_HOLDINGS_PATH = "/holdings"
-SUBFIELD_Z_BASE = "Preservation object, "
-almaMarcxmlTemplate = os.getenv('ALMA_MARCXML_DRSHOLDING_API_TEMPLATE',
-                                "./templates/"
-                                "alma_marcxml_drsholding_api_template.xml")
-
+SUBFIELD_Z_BASE = "Preservation master, "
 FEATURE_FLAGS = "feature_flags"
 ALMA_FEATURE_FORCE_UPDATE_FLAG = "alma_feature_force_update_flag"
 ALMA_FEATURE_VERBOSE_FLAG = "alma_feature_verbose_flag"
@@ -67,6 +63,8 @@ data_dir = os.getenv('DATA_DIR', './')
 notifyJM = False
 jobCode = 'drsholding2alma'
 instance = os.getenv('INSTANCE', '')
+DELAY_SECS = os.getenv('DELAY_SECS', 60)
+MAX_RETRIES = os.getenv('MAX_RETRIES', 3)
 
 """
 This the worker class for the etd alma service.
@@ -93,9 +91,6 @@ class DRSHoldingByAPI():
         self.object_urn = object_urn
         self.unittesting = unittesting
         self.integration_test = integration_test
-        self.marc_xml_values = {}
-        self.marc_xml_values['pqid'] = pqid
-        self.marc_xml_values['object_urn'] = object_urn
         self.namespace_mapping = {'srw':
                                   'http://www.loc.gov/zing/srw/',
                                   'marc': 'http://www.loc.gov/MARC21/slim',
@@ -108,8 +103,8 @@ class DRSHoldingByAPI():
             if (not self.unittesting): # pragma: no cover
                 current_span = trace.get_current_span()
                 current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event(f'can\'t create {self.output_dir}')
-            self.logger.critical(f'can\'t create {self.output_dir}') # pragma: no cover
+                current_span.add_event(f'Can\'t create {self.output_dir}')
+            self.logger.critical(f'Can\'t create {self.output_dir}') # pragma: no cover
 
         if not unittesting:
             self.mongoutil = MongoUtil()  # pragma: no cover, unit testing doesn't use mongo # noqa
@@ -126,9 +121,9 @@ class DRSHoldingByAPI():
         """
         current_span = trace.get_current_span()
         if (not self.unittesting):  # pragma: no cover
-            current_span.add_event("getting mms id via proquest id")
+            current_span.add_event("Getting mms id via proquest id")
             current_span.set_attribute("identifier", pqid)
-        self.logger.debug("getting mms id via proquest id")
+        self.logger.debug("Getting mms id via proquest id")
 
         r = requests.get(ALMA_SRU_MARCXML_BASE + pqid)
         self.logger.debug(ALMA_SRU_MARCXML_BASE + pqid)
@@ -137,32 +132,19 @@ class DRSHoldingByAPI():
             with open(sru_file, 'wb') as f:
                 f.write(r.content)
         else:
-            self.logger.error(f"Error getting DRS holding for pqid: {pqid}")
+            self.logger.error("HTTP error " + str(r.status_code) +
+                              " getting DRS holding for pqid: " +
+                              str(self.pqid))
+            self.logger.error(r.text)
             return False
 
         mmsid_xpath = "//srw:searchRetrieveResponse/srw:records/srw:record/" \
                       "srw:recordIdentifier"
-        xpath_245_ind2_xpath = "string(//marc:record/marc:datafield[@tag='245']/@id2)"
-        xpath_245_subfield_a_xpath = "//marc:record/marc:datafield[@tag='245']" \
-            "/marc:subfield[@code='a']"
 
         doc = ET.parse(sru_file)
         mms_id = doc.xpath(mmsid_xpath,
                            namespaces=self.namespace_mapping)[0].text
-        self.marc_xml_values['mms_id'] = mms_id
         self.mmsid = mms_id
-        xpath_245_ind2 = doc.xpath(xpath_245_ind2_xpath,
-                                   namespaces=self.namespace_mapping)
-        self.logger.debug("xpath_245_ind2")
-        self.logger.debug(xpath_245_ind2)
-        self.marc_xml_values['titleIndicator2'] = ""
-        if (xpath_245_ind2 is not None and len(xpath_245_ind2) > 0):
-            self.marc_xml_values['titleIndicator2'] = xpath_245_ind2.text
-        xpath_245_subfield_a = doc.xpath(xpath_245_subfield_a_xpath,
-                                         namespaces=self.namespace_mapping)[0]
-        self.logger.debug("xpath_245_subfield_a")
-        self.logger.debug(xpath_245_subfield_a)
-        self.marc_xml_values['title'] = xpath_245_subfield_a.text
 
         return mms_id
 
@@ -182,9 +164,9 @@ class DRSHoldingByAPI():
 
         current_span = trace.get_current_span()
         if (not self.unittesting):  
-            current_span.add_event("getting drs holdings by mms id")
+            current_span.add_event("Getting drs holdings by mms id")
             current_span.set_attribute("mms_id", mms_id)
-        self.logger.debug("getting drs holdings by mms id")
+        self.logger.debug("Getting drs holdings by mms id")
         self.logger.debug(ALMA_API_BASE + ALMA_GET_BIB_BASE + mms_id
                          + ALMA_GET_HOLDINGS_PATH + "?apikey=" + ALMA_API_KEY)
 
@@ -195,8 +177,10 @@ class DRSHoldingByAPI():
             with open(holdings_file, 'wb') as f:
                 f.write(r.content)
         else:
-            self.logger.error("Error getting DRS holdings list "
-                              "for pqid: " + "self.pqid")
+            self.logger.error("HTTP error {r.status_code}" +
+                              " getting DRS holdings list " +
+                              " for pqid: " + str(self.pqid))
+            self.logger.error(r.text)
             return False
 
         # in case there are multiple holdings, loop through the holdings.xml file
@@ -211,22 +195,12 @@ class DRSHoldingByAPI():
             location_code = holding.xpath(loc_xpath)[0].text
             holding_id = holding.xpath(holding_id_xpath)[0].text
             if (len(library_code) == 3 and location_code == "NET"):
-                self.marc_xml_values['library_code'] = library_code
-                self.marc_xml_values['location_code'] = location_code
-                self.marc_xml_values['holding_id'] = holding_id
                 self.holding_id = holding_id
                 break
         if self.holding_id is None:
-            self.logger.error("Error getting DRS holdings id for pqid: " +
+            self.logger.error("Xpath error (holding id not found) " +
+                              " getting DRS holdings id for pqid: " +
                               self.pqid)
-            return False
-        if self.marc_xml_values['library_code'] is None:
-            self.logger.error("Error getting DRS holdings lib code " +
-                              "for pqid: " + self.pqid)
-            return False
-        if self.marc_xml_values['location_code'] is None:
-            self.logger.error("Error getting DRS holdings location code " +
-                              "for pqid: " + self.pqid)
             return False
         return self.holding_id
 
@@ -241,11 +215,11 @@ class DRSHoldingByAPI():
         """
         current_span = trace.get_current_span()  # pragma: no cover
         if (not self.unittesting):
-            current_span.add_event("get drs holding")
+            current_span.add_event("Get drs holding")
             current_span.set_attribute("holding_id", holding_id)
             current_span.set_attribute("mms_id", mms_id)
 
-        self.logger.debug("get drs holding")
+        self.logger.debug("Get drs holding")
         self.logger.debug(ALMA_API_BASE + ALMA_GET_BIB_BASE + mms_id +
                          ALMA_GET_HOLDINGS_PATH + "/" + holding_id +
                          "?apikey=" + ALMA_API_KEY)
@@ -258,149 +232,57 @@ class DRSHoldingByAPI():
             with open(holding_file, 'wb') as f:
                 f.write(r.content)
         else:
-            self.logger.error("Error getting DRS holding file for pqid: " +
-                              self.pqid)
+            self.logger.error("HTTP error " + str(r.status_code) + 
+                              " getting DRS holding file for pqid: " +
+                              str(self.pqid))
+            self.logger.error(r.text)
             return False
-
-        doc = ET.parse(holding_file)
-        leader_xpath = "//record/leader"
-        xpath_001_xpath = "//record/controlfield[@tag='001']"
-        xpath_005_xpath = "//record/controlfield[@tag='005']"
-        xpath_008_xpath = "//record/controlfield[@tag='008']"
-        created_by_xpath = "//holding/created_by"
-        created_date_xpath = "//holding/created_date"
-        self.marc_xml_values['last_modified_by'] = "ETD"
-        dateTimeStamp = datetime.fromtimestamp(int(time())).strftime("%Y-%m-%dZ")
-        self.marc_xml_values['last_modified_date'] = dateTimeStamp
-        self.marc_xml_values['last_modified_by'] = "ETDDEV"
-
-        self.marc_xml_values['leader'] = doc.xpath(leader_xpath,
-                                namespaces=self.namespace_mapping)[0].text
-        self.marc_xml_values['001'] = doc.xpath(xpath_001_xpath,
-                                namespaces=self.namespace_mapping)[0].text
-        self.marc_xml_values['005'] = doc.xpath(xpath_005_xpath,
-                                namespaces=self.namespace_mapping)[0].text
-        self.marc_xml_values['008'] = doc.xpath(xpath_008_xpath,
-                                namespaces=self.namespace_mapping)[0].text
-        self.marc_xml_values['created_by'] = doc.xpath(created_by_xpath,
-                                namespaces=self.namespace_mapping)[0].text
-        self.marc_xml_values['created_date'] = doc.xpath(created_date_xpath,
-                                namespaces=self.namespace_mapping)[0].text
-
-        if self.marc_xml_values['leader'] is None:
-            self.logger.error("Error getting marc leader value " +
-                              "for pqid: " + self.pqid)
-            return False
-        if self.marc_xml_values['001'] is None:
-            self.logger.error("Error getting marc 001 value " +
-                              "for pqid: " + self.pqid)
-            return False
-        if self.marc_xml_values['005'] is None:
-            self.logger.error("Error getting marc 005 value " +
-                              "for pqid: " + self.pqid)
-            return False
-        if self.marc_xml_values['008'] is None:
-            self.logger.error("Error getting marc 008 value " +
-                              "for pqid: " + self.pqid)
-            return False
-
         # return the xml holding
         return r.content
 
  
     @tracer.start_as_current_span("transform_drs_holding")
-    def transform_drs_holding(self, batchOutDir, marcXmlValues, verbose=False):
+    def transform_drs_holding(self, batchOutDir, urn, verbose=False):
         """
         Transforms the marcxml for the DRS holding.
 
         Args:
-            marc_xml_values (dict): The marcxml values to be transformed.
+            batchOutDir (str): The batch output directory.
+            urn (str): The urn to added to the transformed holding record.
 
         Returns:
             bool: True if the marcxml was transformed, False otherwise.
         """
         current_span = trace.get_current_span()
         if (not self.unittesting):  # pragma: no cover
-            current_span.add_event("transforming drs holding")
-        self.logger.debug("transforming drs holding")
+            current_span.add_event("Transforming drs holding")
+        self.logger.debug("Transforming drs holding")
 
         updated_holding = f'{batchOutDir}/updated_holding.xml'
-        # Load template file and swapped in variables
-        marcXmlTree = etree.parse(almaMarcxmlTemplate)
+        holding_file = f'{batchOutDir}/holding.xml'
+        # Load existing holding file and swap in urn
+        marcXmlTree = etree.parse(holding_file)
         rootRecord = marcXmlTree.getroot()
 
         try:
-            for child in rootRecord.iter('holding_id', 'created_by',
-                                         'created_date','last_modified_by',
-                                         'last_modified_date', 
-                                         'leader', 'controlfield', 'subfield'):
-                # header tags
-                if child.tag == 'holding_id':
-                    childText = child.text.replace('HOLDING_ID', marcXmlValues['holding_id'])
-                    child.text = childText
-                elif child.tag == 'created_by':
-                    childText = child.text.replace('CREATED_BY', marcXmlValues['created_by'])
-                    child.text = childText
-                elif child.tag == 'created_date':
-                    childText = child.text.replace('CREATED_DATE', marcXmlValues['created_date'])
-                    child.text = childText
-                elif child.tag == 'last_modified_by':
-                    childText = child.text.replace('LAST_MODIFIED_BY', marcXmlValues['last_modified_by'])
-                    child.text = childText
-                elif child.tag == 'last_modified_date':
-                    childText = child.text.replace('LAST_MODIFIED_DATE', marcXmlValues['last_modified_date'])
-                    child.text = childText
-
-                #leader tag
-                elif child.tag == 'leader':
-                    childText = child.text.replace('LEADER', marcXmlValues['leader'])
-                    child.text = childText
-
-                # 008 controlfield
-                elif child.tag == 'controlfield':
-                    if child.attrib['tag'] == '008':
-                        childText = child.text.replace('FIELD_008', marcXmlValues['008'])
-                        child.text = childText
+            for child in rootRecord.iter('subfield'):
 
                 # datafield/subfields
-                elif child.tag == 'subfield':
+                if child.tag == 'subfield':
                     parent = child.getparent()
                     if parent.tag == 'datafield':
-
-                        # Datafield 035, Proquest ID
-                        if parent.attrib['tag'] == '035':
-                            if child.attrib['code'] == 'a':
-                                childText = child.text.replace('PROQUEST_IDENTIFIER_VALUE', marcXmlValues['pqid'])
-                                child.text = childText
-
-                        # Datafield 245, title and title indicator 2
-                        elif parent.attrib['tag'] == '245':
-                            if child.attrib['code'] == 'a':
-                                childText = child.text.replace('TITLE_VALUE', marcXmlValues['title'])
-                                child.text = childText
-                                parentInd2 = parent.attrib['ind2'].replace('TITLE_INDICATOR_2_VALUE', marcXmlValues['titleIndicator2'])
-                                parent.attrib['ind2'] = parentInd2
-
                         # Datafield 852
-                        elif parent.attrib['tag'] == '852':
+                        if parent.attrib['tag'] == '852':
                             if child.attrib['code'] == 'z':
-                                childText = child.text.replace('[DRS OBJECT URN]', self.object_urn)
-                                child.text = childText
-                            elif child.attrib['code'] == 'b':
-                                childText = child.text.replace('LIB_CODE_3_CHAR', marcXmlValues['library_code'].upper())
-                                child.text = childText
-
-                        # Datafield 909, proquest id
-                        elif parent.attrib['tag'] == '909':
-                            if child.attrib['code'] == 'k':
-                                childText = child.text.replace('LIB_CODE_3_CHAR', marcXmlValues['library_code'].lower())
+                                childText = f'{SUBFIELD_Z_BASE}{urn}'
                                 child.text = childText
         except Exception as e:  # pragma: no cover
             self.logger.error("Error transforming DRS holding for pqid: " +
                               self.pqid, exc_info=True)
             if (not self.unittesting):
                 current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("error transforming drs holding for pqid: " + self.pqid)
+                current_span.add_event("Error transforming drs holding for pqid: " +
+                                       self.pqid)
             return False
 
         try:
@@ -409,12 +291,12 @@ class DRSHoldingByAPI():
                 UpdatedRecordOut.write('<?xml version="1.0" encoding="UTF-8"?>\n')
                 updated_holding_xml = etree.tostring(rootRecord, encoding='unicode')
                 UpdatedRecordOut.write(updated_holding_xml)
-        except Exception as e:  
+        except Exception as e:  # pragma: no cover
             self.logger.error("Error writing DRS holding for pqid: " + self.pqid, exc_info=True)
             if (not self.unittesting):  # pragma: no cover
                 current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("error writing drs holding for pqid: " + self.pqid)
-                return False
+                current_span.add_event("Error writing drs holding for pqid: " + self.pqid)  # pragma: no cover
+                return False  # pragma: no cover
 
         self.logger.debug(f'Wrote {updated_holding}')
 
@@ -433,8 +315,8 @@ class DRSHoldingByAPI():
         """
         current_span = trace.get_current_span()
         if (not self.unittesting):
-            current_span.add_event("submitting drs holding")
-        self.logger.debug("submitting drs holding")
+            current_span.add_event("Submitting drs holding")
+        self.logger.debug("Submitting drs holding")
         self.logger.debug(ALMA_API_BASE + ALMA_GET_BIB_BASE +
                           mms_id + "/holdings/" + holding_id)
 
@@ -451,6 +333,7 @@ class DRSHoldingByAPI():
         else:
             self.logger.error("Error submitting new DRS holding for pqid: " +
                               pqid + " status code: " + str(r.status_code))
+            self.logger.error(r.text)
             return False
 
 
@@ -466,9 +349,9 @@ class DRSHoldingByAPI():
         """
         current_span = trace.get_current_span()
         if (not self.unittesting):
-            current_span.add_event("confirming drs holding")
+            current_span.add_event("Confirming drs holding")
             current_span.set_attribute("identifier", pqid)
-        self.logger.debug("confirming new drs holding")
+        self.logger.debug("Confirming new drs holding")
         r = requests.get(ALMA_API_BASE + ALMA_GET_BIB_BASE + mms_id +
                          ALMA_GET_HOLDINGS_PATH + "/" + holding_id +
                          "?apikey=" + ALMA_API_KEY)
@@ -477,8 +360,10 @@ class DRSHoldingByAPI():
             with open(sru_file, 'wb') as f:
                 f.write(r.content)
         else:
-            self.logger.error("Error getting updated DRS holding for pqid: " +
-                              pqid)
+            self.logger.error("HTTP error " + str(r.status_code) +
+                              " getting updated DRS holding for pqid: " +
+                             str(self.pqid))
+            self.logger.error(r.text)
             return False
 
         urn_xpath = "//record/datafield[@tag='852']" \
@@ -486,8 +371,10 @@ class DRSHoldingByAPI():
         doc = ET.parse(sru_file)
         urn_statement = doc.xpath(urn_xpath,
                            namespaces=self.namespace_mapping)[0].text
-        self.logger.debug("urn statement: " + urn_statement)
-        return urn_statement == SUBFIELD_Z_BASE + urn
+        self.logger.debug("URN statement: " + urn_statement)
+        expected_statement = f'{SUBFIELD_Z_BASE}{urn}'
+        self.logger.debug("exp statement: " + expected_statement)
+        return urn_statement == expected_statement
 
 
     @tracer.start_as_current_span("send_to_alma")
@@ -517,14 +404,14 @@ class DRSHoldingByAPI():
         if (INTEGRATION_TEST in message and
             message[INTEGRATION_TEST] == True):
             integration_test = True
-            self.logger.info('running integration test for alma drs holding service')
+            self.logger.info('Running integration test for alma drs holding service')
             if (not self.unittesting):
-                current_span.add_event("running integration test for alma drs holding service")
+                current_span.add_event("Running integration test for alma drs holding service")
         if (not self.unittesting):
-            current_span.add_event("sending to alma drs holding worker main")
-        self.logger.info('sending to alma drs holding worker main')
+            current_span.add_event("Sending to alma drs holding worker main")
+        self.logger.info('Sending to alma drs holding worker main')
         retval = self.send_to_alma_worker(force, verbose, integration_test)
-        self.logger.info('complete')
+        self.logger.info('Complete')
         return retval
 		
     @tracer.start_as_current_span("send_to_alma_worker")
@@ -552,7 +439,7 @@ class DRSHoldingByAPI():
         notifyJM.log('pass', 'Update ETD Alma DRS Holding Record', verbose)
         notifyJM.report('start')
         if (not self.unittesting):
-            current_span.add_event("sending drs holding to alma dropbox")
+            current_span.add_event("Sending drs holding to alma dropbox")
         self.logger.debug(f'{self.pqid} DRS holding was sent to Alma')
 
         # Check to see if this was already processed by looking in Mongo
@@ -570,42 +457,52 @@ class DRSHoldingByAPI():
         if not mms_id:
             self.logger.error("Error getting mms id for pqid: " +
                               self.pqid)
+            notifyJM.log('fail', f'Error getting mms id for pqid: {self.pqid}')
             return False
+        time.sleep(DELAY_SECS)
         holding_id = self.get_drs_holding_id_by_mms_id(mms_id)
         if not holding_id:
             self.logger.error("Error getting mms id for pqid: " +
                               self.pqid)
+            notifyJM.log('fail', f'Error uploading drs holding for pqid: {self.pqid}')
             if (not self.unittesting):
                 current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("error getting mms id for pqid: " + self.pqid)
+                current_span.add_event("Error getting mms id for pqid: " + self.pqid)
             return False
+        time.sleep(DELAY_SECS)
         holding_record = self.get_drs_holding(mms_id, holding_id)
         if not holding_record:
             self.logger.error("Error getting drs holding for pqid: " +
                               self.pqid)
+            notifyJM.log('fail', f'Error getting drs holding for pqid: {self.pqid}')
             if (not self.unittesting):
                 current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("error getting drs holding for pqid: " + self.pqid)
+                current_span.add_event("Error getting drs holding for pqid: " + self.pqid)
             return False
-        transformed = self.transform_drs_holding(self.output_dir, self.marc_xml_values)
+        time.sleep(DELAY_SECS)
+        transformed = self.transform_drs_holding(self.output_dir,  self.object_urn)
         if not transformed:
-            notifyJM.log('fail', f'Error transforming drs holding record for pqid: {self.pqid}', verbose)
             self.logger.error("Error transforming drs holding record for pqid: " +
                               self.pqid)
+            notifyJM.log('fail', f'Error transforming drs holding record for pqid: {self.pqid}', verbose)
             if (not self.unittesting):
                 current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("error transforming drs holding for pqid: " + self.pqid)
+                current_span.add_event("Error transforming drs holding for pqid: " + self.pqid)
             return False
         notifyJM.log('pass', f'Wrote updated_holding for pqid: {self.pqid}', verbose)
+        time.sleep(DELAY_SECS)
         uploaded = self.upload_new_drs_holding(self.pqid, mms_id, holding_id,
                                                f'{self.output_dir}/updated_holding.xml')
         if not uploaded:
             self.logger.error("Error uploading drs holding for pqid: " +
                               self.pqid)
+            notifyJM.log('fail', f'Error uploading drs holding for pqid: {self.pqid}')
             if (not self.unittesting):
                 current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("error uploading drs holding for pqid: " + self.pqid)
+                current_span.add_event("Error uploading drs holding for pqid: " + self.pqid)
             return False
+        notifyJM.log('pass', f'Uploaded updated holding for pqid: {self.pqid}', verbose)
+        time.sleep(DELAY_SECS)
         drsHoldingSent = self.confirm_new_drs_holding(self.pqid, mms_id,
                                                       holding_id, self.object_urn)
         if not drsHoldingSent:
@@ -613,9 +510,10 @@ class DRSHoldingByAPI():
                               self.pqid)
             if (not self.unittesting):
                 current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("error confirming drs holding update for pqid: " + self.pqid)
+                current_span.add_event("Error confirming drs holding update for pqid: " + self.pqid)
+                notifyJM.log('fail', f'Error confirming drs holding update for pqid: {self.pqid}')
             return False
-
+        notifyJM.log('pass', f'Confirmed upload of updated holding for pqid: {self.pqid}', verbose)
         # delete the output directory
         shutil.rmtree(f'{data_dir}/out/proquest{self.pqid}-holdings', ignore_errors=True)
 
@@ -629,7 +527,7 @@ class DRSHoldingByAPI():
                 self.mongoutil.update_status(
                     query, mongo_util.DRS_HOLDING_API_STATUS)
                 current_span.add_event(f'Status for Proquest id {self.pqid} in {batch} updated in mongo')
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 self.logger.error(f"Error updating status for {self.pqid}: {e}")
                 current_span.set_status(Status(StatusCode.ERROR))
                 current_span.add_event(f'Could not update proquest id {self.pqid} in {batch} updated in mongo')
@@ -646,7 +544,7 @@ class DRSHoldingByAPI():
     @tracer.start_as_current_span("send_holding_to_alma_worker")
     def __record_already_processed(self): # pragma: no cover, not using for unit tests
         current_span = trace.get_current_span()
-        current_span.add_event("verifying if DRS holding exists")
+        current_span.add_event("Verifying if DRS holding exists")
         query = {mongo_util.FIELD_SUBMISSION_STATUS:
                  mongo_util.DRS_HOLDING_API_STATUS,
 				 mongo_util.FIELD_PQ_ID: self.pqid}
@@ -662,7 +560,7 @@ class DRSHoldingByAPI():
             self.logger.info(f"Found {len(matching_records)} \
                              matching records")
             self.logger.debug(f"Matching records: {matching_records}")
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             self.logger.error(f"Error querying records: {e}")
             current_span.set_status(Status(StatusCode.ERROR))
             current_span.add_event("Unable to query mongo for DRS holdings")
@@ -674,7 +572,7 @@ class DRSHoldingByAPI():
     @tracer.start_as_current_span("send_holding_to_alma_worker")
     def ___get_record_from_mongo(self): # pragma: no cover, not using for unit tests
         current_span = trace.get_current_span()
-        current_span.add_event("getting data from mongo exists")
+        current_span.add_event("Getting data from mongo exists")
         query = {mongo_util.FIELD_SUBMISSION_STATUS:
                  mongo_util.ALMA_STATUS,
 				 mongo_util.FIELD_PQ_ID: self.pqid}
@@ -682,7 +580,7 @@ class DRSHoldingByAPI():
                   mongo_util.FIELD_SCHOOL_ALMA_DROPBOX: 1,
                   mongo_util.FIELD_SUBMISSION_STATUS: 1,
                   mongo_util.FIELD_DIRECTORY_ID: 1}
-        self.logger.info("getting data from mongo exists")
+        self.logger.info("Getting data from mongo exists")
         matching_records = []
 
         try:
@@ -690,7 +588,7 @@ class DRSHoldingByAPI():
             self.logger.info(f"Found {len(matching_records)} \
                              matching records")
             self.logger.debug(f"Matching records: {matching_records}")
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             self.logger.error(f"Error querying records: {e}")
             current_span.set_status(Status(StatusCode.ERROR))
             current_span.add_event("Unable to query mongo for DRS holdings")
