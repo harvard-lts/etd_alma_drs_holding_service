@@ -18,7 +18,7 @@ import logging
 from . import configure_logger
 import requests
 from datetime import datetime
-from time import time
+import time
 from lib.notify import notify
 import lxml.etree as ET
 import shutil
