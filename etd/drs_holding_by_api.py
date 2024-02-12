@@ -63,8 +63,8 @@ data_dir = os.getenv('DATA_DIR', './')
 notifyJM = False
 jobCode = 'drsholding2alma'
 instance = os.getenv('INSTANCE', '')
-DELAY_SECS = os.getenv('DELAY_SECS', 60)
-MAX_RETRIES = os.getenv('MAX_RETRIES', 3)
+DELAY_SECS = int(os.getenv('DELAY_SECS', 60))
+MAX_RETRIES = int(os.getenv('MAX_RETRIES', 3))
 
 """
 This the worker class for the etd alma service.
