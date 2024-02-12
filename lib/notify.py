@@ -29,6 +29,7 @@ commonBin = libDir.replace('lib', 'bin')
 logDir    = os.getenv("LOGFILE_PATH", "/home/etdadm/logs/etd_alma")
 sys.path.append(commonBin)
 from .ltstools import adminMailTo, adminMailFrom, get_date_time_stamp, jobMonitor, send_mail
+instance = os.getenv('INSTANCE', "dev")
 
 # Use this class to track pass, fail and warning script messages and
 # to report script results. 
@@ -179,6 +180,12 @@ class notify: # pragma: no cover
 	#   noRetries     Do not retry if Job Monitor fails to respond
 	#
 	def notifyJM(self, jobCode, statusCode, message = 'none', runId = False, noRetries = False):
+		jobmon_connection_status = self.verify_job_monitor_connection(jobMonitor)
+		if not jobmon_connection_status:
+			logging.getLogger('etd_dash').error("Job Monitor {} is not reachable".format(jobMonitor))
+			if instance != "prod":
+				return "Job Monitor is not reachable"
+		
 		httpError = False
 
 		# Number of attempts to notify the Job Monitor
@@ -256,4 +263,14 @@ class notify: # pragma: no cover
 		print(message)
 
 		return message
-			
+
+	def verify_job_monitor_connection(self, jobmon_url):
+		# Verify connection to the Job Monitor
+		try:
+			response = requests.get(jobmon_url, timeout = 15)
+			if response.status_code == 200:
+				return True
+			else:
+				return False
+		except Exception as e:
+			return False			
