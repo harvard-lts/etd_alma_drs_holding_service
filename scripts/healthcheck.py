@@ -12,6 +12,9 @@ HEARTBEAT_FILE = Path(hbeat_path)
 HEARTBEAT_WINDOW = int(os.getenv("HEARTBEAT_WINDOW", 60))
 ALMA_API_KEY = os.getenv("ALMA_API_KEY")
 ALMA_HEALTHCHECK_URL = os.getenv("ALMA_HEALTHCHECK_URL") + ALMA_API_KEY
+JOBMON_URL = os.getenv("jobMonitor")
+INSTANCE = os.getenv("INSTANCE", "dev")
+
 
 # check alma
 try:
@@ -23,6 +26,20 @@ try:
 except Exception:
     print("alma healthcheck failed")
     sys.exit(1)
+
+# check jobmon if prod
+if INSTANCE == "prod":
+    if JOBMON_URL is None:
+        print("jobmon url not set")
+        sys.exit(1)
+    try:
+        r = requests.get(JOBMON_URL, verify=False)
+        if (r.status_code != 200):
+            print("jobmon healthcheck failed")
+            sys.exit(1)
+    except Exception:
+        print("jobmon healthcheck failed")
+        sys.exit(1)
 
 # check timestamp file
 try:
