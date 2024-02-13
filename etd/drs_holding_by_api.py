@@ -66,13 +66,18 @@ instance = os.getenv('INSTANCE', '')
 DELAY_SECS = int(os.getenv('DELAY_SECS', 60))
 MAX_RETRIES = int(os.getenv('MAX_RETRIES', 3))
 
+logger = logging.getLogger('etd_alma_drs_holding')
+if not logger.handlers:
+    configure_logger()
+logger.propagate = False
+
 """
 This the worker class for the etd alma service.
 """
 
 
 class DRSHoldingByAPI():
-    
+
     @tracer.start_as_current_span("init_drs_holding_by_api")
     def __init__(self, pqid, object_urn, unittesting=False,
                  integration_test=False,
@@ -82,9 +87,7 @@ class DRSHoldingByAPI():
          This method initializes the class and creates a working directory 
          for xml files.
         """
-        self.logger = logging.getLogger('etd_alma_drs_holding')
-        if (not self.logger.hasHandlers()):
-            configure_logger()
+        self.logger = logger
 
         self.pqid = pqid
         self.mmsid = None

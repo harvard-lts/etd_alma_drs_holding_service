@@ -82,6 +82,11 @@ ALMA_FEATURE_VERBOSE_FLAG = "alma_feature_verbose_flag"
 INTEGRATION_TEST = os.getenv('MONGO_DB_COLLECTION_ITEST', 'integration_test')
 ALMA_TEST_BATCH_NAME = os.getenv('ALMA_TEST_BATCH_NAME','proquest2023071720-993578-gsd')
 
+logger = logging.getLogger('etd_alma_drs_holding')
+if not logger.handlers:
+    configure_logger()
+logger.propagate = False
+
 """
 This the worker class for the etd alma service.
 """
@@ -90,9 +95,7 @@ This the worker class for the etd alma service.
 class DRSHoldingByDropbox():
     
     def __init__(self, pqid, object_urn, test_collection=None, unittesting=False):
-        self.logger = logging.getLogger('etd_alma_drs_holding')
-        if (not self.logger.hasHandlers()):
-            configure_logger()
+        self.logger = logger
 
         self.pqid = pqid
         self.object_urn = object_urn
