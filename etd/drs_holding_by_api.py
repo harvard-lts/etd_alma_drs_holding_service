@@ -67,7 +67,7 @@ DELAY_SECS = int(os.getenv('DELAY_SECS', 60))
 MAX_RETRIES = int(os.getenv('MAX_RETRIES', 3))
 
 logger = logging.getLogger('etd_alma_drs_holding')
-if not logger.handlers:
+if not logger.handlers:  
     configure_logger()
 logger.propagate = False
 

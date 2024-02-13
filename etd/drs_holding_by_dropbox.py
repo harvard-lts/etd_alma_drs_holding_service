@@ -83,7 +83,7 @@ INTEGRATION_TEST = os.getenv('MONGO_DB_COLLECTION_ITEST', 'integration_test')
 ALMA_TEST_BATCH_NAME = os.getenv('ALMA_TEST_BATCH_NAME','proquest2023071720-993578-gsd')
 
 logger = logging.getLogger('etd_alma_drs_holding')
-if not logger.handlers:
+if not logger.handlers: # pragma: no cover
     configure_logger()
 logger.propagate = False
 
