@@ -182,7 +182,7 @@ class notify: # pragma: no cover
 	def notifyJM(self, jobCode, statusCode, message = 'none', runId = False, noRetries = False):
 		jobmon_connection_status = self.verify_job_monitor_connection(jobMonitor)
 		if not jobmon_connection_status:
-			logging.getLogger('etd_dash').error("Job Monitor {} is not reachable".format(jobMonitor))
+			logging.getLogger('etd_alma_drs_holding').error("Job Monitor {} is not reachable".format(jobMonitor))
 			if instance != "prod":
 				return "Job Monitor is not reachable"
 		
