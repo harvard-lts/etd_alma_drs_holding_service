@@ -72,8 +72,6 @@ This the worker class for the etd alma service.
 
 
 class DRSHoldingByAPI():
-    logger = logging.getLogger('etd_alma_drs_holding')
-
     
     @tracer.start_as_current_span("init_drs_holding_by_api")
     def __init__(self, pqid, object_urn, unittesting=False,
@@ -84,7 +82,10 @@ class DRSHoldingByAPI():
          This method initializes the class and creates a working directory 
          for xml files.
         """
-        configure_logger()
+        self.logger = logging.getLogger('etd_alma_drs_holding')
+        if (not self.logger.hasHandlers()):
+            configure_logger()
+
         self.pqid = pqid
         self.mmsid = None
         self.holding_id = None
