@@ -22,6 +22,7 @@ import time
 from lib.notify import notify
 import lxml.etree as ET
 import shutil
+import traceback
 
 # To help find other directories that might hold modules or config files
 binDir = os.path.dirname(os.path.realpath(__file__))
@@ -451,69 +452,10 @@ class DRSHoldingByAPI():
                 current_span.add_event(f'Holding record {self.pqid} has already been created. Use force flag to re-run.')
                 return False
 
-        # START PROCESSING
-        # Get the mms id
-        mms_id = self.get_mms_id(self.pqid)
-        if not mms_id:
-            self.logger.error("Error getting mms id for pqid: " +
-                              self.pqid)
-            notifyJM.log('fail', f'Error getting mms id for pqid: {self.pqid}')
+        processing_retval = self.__process_record_for_alma(verbose)
+        if (not processing_retval):
             return False
-        time.sleep(DELAY_SECS)
-        holding_id = self.get_drs_holding_id_by_mms_id(mms_id)
-        if not holding_id:
-            self.logger.error("Error getting mms id for pqid: " +
-                              self.pqid)
-            notifyJM.log('fail', f'Error uploading drs holding for pqid: {self.pqid}')
-            if (not self.unittesting):
-                current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("Error getting mms id for pqid: " + self.pqid)
-            return False
-        time.sleep(DELAY_SECS)
-        holding_record = self.get_drs_holding(mms_id, holding_id)
-        if not holding_record:
-            self.logger.error("Error getting drs holding for pqid: " +
-                              self.pqid)
-            notifyJM.log('fail', f'Error getting drs holding for pqid: {self.pqid}')
-            if (not self.unittesting):
-                current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("Error getting drs holding for pqid: " + self.pqid)
-            return False
-        time.sleep(DELAY_SECS)
-        transformed = self.transform_drs_holding(self.output_dir,  self.object_urn)
-        if not transformed:
-            self.logger.error("Error transforming drs holding record for pqid: " +
-                              self.pqid)
-            notifyJM.log('fail', f'Error transforming drs holding record for pqid: {self.pqid}', verbose)
-            if (not self.unittesting):
-                current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("Error transforming drs holding for pqid: " + self.pqid)
-            return False
-        notifyJM.log('pass', f'Wrote updated_holding for pqid: {self.pqid}', verbose)
-        time.sleep(DELAY_SECS)
-        uploaded = self.upload_new_drs_holding(self.pqid, mms_id, holding_id,
-                                               f'{self.output_dir}/updated_holding.xml')
-        if not uploaded:
-            self.logger.error("Error uploading drs holding for pqid: " +
-                              self.pqid)
-            notifyJM.log('fail', f'Error uploading drs holding for pqid: {self.pqid}')
-            if (not self.unittesting):
-                current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("Error uploading drs holding for pqid: " + self.pqid)
-            return False
-        notifyJM.log('pass', f'Uploaded updated holding for pqid: {self.pqid}', verbose)
-        time.sleep(DELAY_SECS)
-        drsHoldingSent = self.confirm_new_drs_holding(self.pqid, mms_id,
-                                                      holding_id, self.object_urn)
-        if not drsHoldingSent:
-            self.logger.error("Error confirming drs holding update for pqid: " +
-                              self.pqid)
-            if (not self.unittesting):
-                current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("Error confirming drs holding update for pqid: " + self.pqid)
-                notifyJM.log('fail', f'Error confirming drs holding update for pqid: {self.pqid}')
-            return False
-        notifyJM.log('pass', f'Confirmed upload of updated holding for pqid: {self.pqid}', verbose)
+        
         # delete the output directory
         shutil.rmtree(f'{data_dir}/out/proquest{self.pqid}-holdings', ignore_errors=True)
 
@@ -540,6 +482,92 @@ class DRSHoldingByAPI():
         if (not self.unittesting):
             current_span.add_event("completed")
         return drsHoldingSent
+
+    @tracer.start_as_current_span("send_holding_to_alma_worker")
+    def __process_record_for_alma(self, verbose=False, retry_count=0):
+        """
+        Process a record for Alma.
+
+        Args:
+            verbose (bool): Flag indicating whether to log verbose output. Default is False.
+            retry_count (int): Number of retries for processing. Default is 0.
+
+        Returns:
+            bool: True if the record was processed successfully, False otherwise.
+        """
+        current_span = trace.get_current_span()
+        try:
+            # START PROCESSING
+            # Get the mms id
+            mms_id = self.get_mms_id(self.pqid)
+            if not mms_id:
+                self.logger.error("Error getting mms id for pqid: " +
+                                  self.pqid)
+                notifyJM.log('fail', f'Error getting mms id for pqid: {self.pqid}')
+                return False
+            holding_id = self.get_drs_holding_id_by_mms_id(mms_id)
+            if not holding_id:
+                self.logger.error("Error getting mms id for pqid: " +
+                                  self.pqid)
+                notifyJM.log('fail', f'Error uploading drs holding for pqid: {self.pqid}')
+                if (not self.unittesting):
+                    current_span.set_status(Status(StatusCode.ERROR))
+                    current_span.add_event("Error getting mms id for pqid: " + self.pqid)
+                return False
+            holding_record = self.get_drs_holding(mms_id, holding_id)
+            if not holding_record:
+                self.logger.error("Error getting drs holding for pqid: " +
+                                  self.pqid)
+                notifyJM.log('fail', f'Error getting drs holding for pqid: {self.pqid}')
+                if (not self.unittesting):
+                    current_span.set_status(Status(StatusCode.ERROR))
+                    current_span.add_event("Error getting drs holding for pqid: " + self.pqid)
+                return False
+            transformed = self.transform_drs_holding(self.output_dir, self.object_urn)
+            if not transformed:
+                self.logger.error("Error transforming drs holding record for pqid: " +
+                                  self.pqid)
+                notifyJM.log('fail', f'Error transforming drs holding record for pqid: {self.pqid}', verbose)
+                if (not self.unittesting):
+                    current_span.set_status(Status(StatusCode.ERROR))
+                    current_span.add_event("Error transforming drs holding for pqid: " + self.pqid)
+                return False
+            notifyJM.log('pass', f'Wrote updated_holding for pqid: {self.pqid}', verbose)
+            uploaded = self.upload_new_drs_holding(self.pqid, mms_id, holding_id,
+                                                   f'{self.output_dir}/updated_holding.xml')
+            if not uploaded:
+                self.logger.error("Error uploading drs holding for pqid: " +
+                                  self.pqid)
+                notifyJM.log('fail', f'Error uploading drs holding for pqid: {self.pqid}')
+                if (not self.unittesting):
+                    current_span.set_status(Status(StatusCode.ERROR))
+                    current_span.add_event("Error uploading drs holding for pqid: " + self.pqid)
+                return False
+            notifyJM.log('pass', f'Uploaded updated holding for pqid: {self.pqid}', verbose)
+            drsHoldingSent = self.confirm_new_drs_holding(self.pqid, mms_id,
+                                                          holding_id, self.object_urn)
+            if not drsHoldingSent:
+                self.logger.error("Error confirming drs holding update for pqid: " +
+                                  self.pqid)
+                if (not self.unittesting):
+                    current_span.set_status(Status(StatusCode.ERROR))
+                    current_span.add_event("Error confirming drs holding update for pqid: " + self.pqid)
+                    notifyJM.log('fail', f'Error confirming drs holding update for pqid: {self.pqid}')
+                return False
+            notifyJM.log('pass', f'Confirmed upload of updated holding for pqid: {self.pqid}', verbose)
+        except Exception as e:
+            exception_msg = traceback.format_exc()
+            self.logger.error("Error processing record for alma: " + str(e))
+            self.logger.error(exception_msg)
+            current_span.set_status(Status(StatusCode.ERROR))
+            current_span.add_event("Error processing record for alma: " + str(e))
+            # Keep retrying if we haven't reached our max retries number
+            if retry_count < MAX_RETRIES:
+                self.logger.info(f"Retry number {retry_count} Alma processing for {self.pqid}")
+                time.sleep(DELAY_SECS)
+                return self.__process_record_for_alma(verbose, retry_count + 1)
+            return False
+        return True
 
     @tracer.start_as_current_span("send_holding_to_alma_worker")
     def __record_already_processed(self): # pragma: no cover, not using for unit tests
