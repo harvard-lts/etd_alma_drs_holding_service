@@ -452,7 +452,7 @@ class DRSHoldingByAPI():
                 current_span.add_event(f'Holding record {self.pqid} has already been created. Use force flag to re-run.')
                 return False
 
-        processing_retval = self.__process_record_for_alma(verbose)
+        processing_retval = self.process_record_for_alma(verbose)
         if (not processing_retval):
             return False
         
@@ -484,7 +484,7 @@ class DRSHoldingByAPI():
         return drsHoldingSent
 
     @tracer.start_as_current_span("send_holding_to_alma_worker")
-    def __process_record_for_alma(self, verbose=False, retry_count=0):
+    def process_record_for_alma(self, verbose=False, retry_count=0): # pragma: no cover
         """
         Process a record for Alma.
 
@@ -497,6 +497,8 @@ class DRSHoldingByAPI():
         """
         current_span = trace.get_current_span()
         try:
+            if self.pqid is None:
+                raise Exception("PQID is None")
             # START PROCESSING
             # Get the mms id
             mms_id = self.get_mms_id(self.pqid)
@@ -565,7 +567,7 @@ class DRSHoldingByAPI():
             if retry_count < MAX_RETRIES:
                 self.logger.info(f"Retry number {retry_count} Alma processing for {self.pqid}")
                 time.sleep(DELAY_SECS)
-                return self.__process_record_for_alma(verbose, retry_count + 1)
+                return self.process_record_for_alma(verbose, retry_count + 1)
             return False
         return True
 

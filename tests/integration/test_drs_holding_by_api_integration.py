@@ -8,33 +8,33 @@ class TestDRSHoldingByAPI():
         """"
         Test case for get_mms_id method of DRSHoldingByAPI class.
         """
-        pqid = "28542882"
+        pqid = "3333333333"
         object_urn = "URN-3:HUL.DRS.OBJECT:12345678"
         drs_holding = DRSHoldingByAPI(pqid, object_urn, True)
         mms_id = drs_holding.get_mms_id(pqid)
-        assert str(mms_id) == "99156845176203941"
+        assert str(mms_id) == "99157250979803941"
 
     def test_get_drs_holding_id_by_mms_id(self):
         """
         Test case for get_drs_holdings_by_mms_id method of
         DRSHoldingByAPI class.
         """
-        pqid = "7453039999"
+        pqid = "3333333333"
         object_urn = "URN-3:HUL.DRS.OBJECT:12345678"
         drs_holding = DRSHoldingByAPI(pqid, object_urn, True)
-        mms_id = "99156848432503941"
+        mms_id = "99157250979803941"
         time.sleep(60)
         holding_id = drs_holding.get_drs_holding_id_by_mms_id(mms_id)
-        assert str(holding_id) == "222608709850003941"
+        assert str(holding_id) == "222633018330003941"
 
     def test_get_drs_holding(self):
         """
         Test case for get_drs_holding method of DRSHoldingByAPI class.
         """
-        pqid = "7453039999"
+        pqid = "3333333333"
         object_urn = "URN-3:HUL.DRS.OBJECT:12345678"
         mms_id = "99156845176203941"
-        holding_id = "222608684560003941"
+        holding_id = "222633018330003941"
         drs_holding = DRSHoldingByAPI(pqid, object_urn, True)
         time.sleep(60)
         holding_xml = drs_holding.get_drs_holding(mms_id, holding_id)
@@ -44,10 +44,10 @@ class TestDRSHoldingByAPI():
         """
         Test case for upload_new_drs_holding method of DRSHoldingByAPI class.
         """
-        pqid = "7453039999"
+        pqid = "3333333333"
         object_urn = "URN-3:HUL.DRS.OBJECT:12345678"
-        mms_id = "99156848360203941"
-        holding_id = "222608684560003941"
+        mms_id = "99156845176203941"
+        holding_id = "222633018330003941"
         holding_file = "./tests/data/test_upload_nodash_with_urn.xml"
         drs_holding = DRSHoldingByAPI(pqid, object_urn, integration_test=True)
         time.sleep(60)
@@ -58,9 +58,9 @@ class TestDRSHoldingByAPI():
         """
         Test case for confirm_new_drs_holding method of DRSHoldingByAPI class.
         """
-        pqid = "7453039999"
-        mms_id = "99156848360203941"
-        holding_id = "222608684560003941"
+        pqid = "3333333333"
+        mms_id = "99156845176203941"
+        holding_id = "222633018330003941"
         object_urn = "URN-3:HUL.DRS.OBJECT:12345678"
         drs_holding = DRSHoldingByAPI(pqid, object_urn, True)
         time.sleep(60)

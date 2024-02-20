@@ -23,3 +23,14 @@ class TestDRSHoldingByAPI():
                                   namespaces=drs_holding.
                                   namespace_mapping)[0].text
         assert urn_statement == expected_statement
+
+    def test_process_record_for_alma(self):
+        """
+        Test the process_record_for_alma method of DRSHoldingByAPI class.
+        """
+        # Pass none for pqid to force an exception
+        pqid = None
+        object_urn = "URN-3:HUL.DRS.OBJECT:12345678"
+        drs_holding = DRSHoldingByAPI(pqid, object_urn, True)
+        process_retval = drs_holding.process_record_for_alma()
+        assert not process_retval
