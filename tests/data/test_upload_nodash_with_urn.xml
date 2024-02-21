@@ -24,8 +24,8 @@
 <subfield code="2">rdacarrier</subfield>
 </datafield>
 <datafield ind1="8" ind2=" " tag="852">
-<subfield code="b">NET</subfield>
-<subfield code="c">ETD</subfield>
+<subfield code="b">HUA</subfield>
+<subfield code="c">NET</subfield>
 <subfield code="z">Preservation master, URN-3:HUL.DRS.OBJECT:12345678</subfield> 
 </datafield>
 <datafield ind1="4" ind2="0" tag="856">
