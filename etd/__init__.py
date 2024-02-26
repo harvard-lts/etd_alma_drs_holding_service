@@ -4,7 +4,7 @@ import os
 import socket
 from datetime import datetime
 
-LOG_FILE_BACKUP_COUNT = os.getenv('LOG_FILE_BACKUP_COUNT')
+LOG_FILE_BACKUP_COUNT = int(os.getenv('LOG_FILE_BACKUP_COUNT', '30'))
 LOG_ROTATION = "midnight"
 
 container_id = socket.gethostname()
